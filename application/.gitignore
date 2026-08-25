@@ -1,0 +1,6 @@
+/config.php
+/writable/*
+/storage/*
+/vendor/
+error_log
+.DS_Store
