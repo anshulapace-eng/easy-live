@@ -1,4 +1,4 @@
-<?php extend('layouts/backend_layout'); ?>
+<?php extend('layouts/backend_layout1'); ?>
 
 <?php section('content'); ?>
 

@@ -1,4 +1,4 @@
-<?php extend('layouts/backend_layout'); ?>
+<?php extend('layouts/backend_layout1'); ?>
 
 <?php section('content'); ?>
 
@@ -755,74 +755,102 @@
 </div>
 
 <div class="appointment-diary-wrapper">
-    <!-- Header -->
-    <div class="diary-header">
-        <div class="header-left">
-            <div class="icon-box"><i class="fa-regular fa-calendar-days"></i></div>
-            <h4>Appointment Diary</h4>
-        </div>
+<style>
+    /* Compact Mobile & Fluid Single-Row Adjustments */
+    @media (max-width: 1200px) {
+        .diary-header {
+            padding: 8px 12px !important;
+            gap: 6px !important;
+        }
+        .header-left h4 {
+            font-size: 15px !important;
+        }
+        .header-left .icon-box {
+            width: 30px !important;
+            height: 30px !important;
+            font-size: 12px !important;
+            padding: 0 !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .current-date-range {
+            font-size: 12.5px !important;
+            min-width: 140px !important;
+        }
+        .nav-btn, .btn-icon-only, #today-btn {
+            padding: 3px 7px !important;
+            font-size: 11px !important;
+        }
+        .header-right .btn, #new-appointment-btn {
+            padding: 4px 10px !important;
+            font-size: 11.5px !important;
+        }
+    }
+</style>
 
-        <div class="date-navigator">
-            <button class="nav-btn" id="prev-btn"><i class="fa-solid fa-chevron-left"></i></button>
-            <div class="current-date-range" id="date-range-display">Loading...</div>
-            <button class="nav-btn" id="next-btn"><i class="fa-solid fa-chevron-right"></i></button>
+<div class="diary-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 8px 16px; gap: 8px;">
 
-            <button class="nav-btn" id="today-btn">Today</button>
-
-            <button class="btn-icon-only" id="datepicker-trigger-btn" title="Pick Date">
-                <i class="fa-regular fa-calendar"></i>
-            </button>
-            <input type="date" id="calendar-date-picker" style="position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0;">
-        </div>
-
-        <div class="header-right">
-            <button id="reload-appointments" style="display: none;"></button>
-            <a href="#" id="insert-appointment" style="display: none;"></a>
-            <a href="#" id="insert-unavailability" style="display: none;"></a>
-
-            <!-- Export Report Dropdown -->
-            <div class="header-right">
-                <button id="reload-appointments" style="display: none;"></button>
-                <a href="#" id="insert-appointment" style="display: none;"></a>
-                <a href="#" id="insert-unavailability" style="display: none;"></a>
-
-                <div class="dropdown export-btn-shadow" style="display: inline-block;">
-                    <button class="btn-blue dropdown-toggle shadow-sm" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: #fff; color:#000000;">
-                    <i class="fa-solid fa-file-excel" style="color: #137333 !important;"></i> Export Report
-                </button>
-                    <ul class="dropdown-menu p-3 shadow-sm" aria-labelledby="exportDropdown" style="width: 250px; font-size: 13px;">
-                        <li><a class="dropdown-item fw-bold export-option" href="#" data-range="today"><i class="fa-solid fa-calendar-day me-2 text-primary"></i> Today</a></li>
-
-                        <!-- YESTERDAY WITH ARROW ICON -->
-                        <li>
-                            <a class="dropdown-item fw-bold export-option d-flex align-items-center py-2" href="#" data-range="yesterday">
-                                <div style="width: 24px; text-align: center; display: flex; justify-content: center;">
-                                    <span class="d-inline-flex align-items-center justify-content-center bg-success text-white rounded-circle" style="width: 16px; height: 16px;">
-                                        <i class="fa-solid fa-arrow-right-long" style="font-size: 9px;"></i>
-                                    </span>
-                                </div>
-                                Yesterday
-                            </a>
-                        </li>
-
-                        <li><a class="dropdown-item fw-bold export-option" href="#" data-range="tomorrow"><i class="fa-solid fa-calendar-plus me-2 text-success"></i> Tomorrow</a></li>
-                        <li><a class="dropdown-item fw-bold export-option" href="#" data-range="week"><i class="fa-solid fa-calendar-week me-2 text-warning"></i> This Week</a></li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li>
-                            <label class="form-label fw-bold mb-1">Custom Range:</label>
-                            <input type="date" id="export-start-date" class="form-control form-control-sm mb-2">
-                            <input type="date" id="export-end-date" class="form-control form-control-sm mb-2">
-                            <button type="button" class="btn btn-sm btn-primary w-100" id="btn-custom-export">Download Excel</button>
-                        </li>
-                    </ul>
-                </div>
-
-                <button class="btn" style="background: #5A3FEE; color:#fff;" id="new-appointment-btn"><i class="fa-solid fa-plus"></i> New Appointment</button>
-            </div>
-        </div>
+    <!-- Left: Title -->
+    <div class="header-left" style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-shrink: 0; margin-bottom: 0;">
+        <div class="icon-box" style="background: #0d7774; color: white; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px;"><i class="fa-regular fa-calendar-days"></i></div>
+        <h4 style="margin: 0; font-size: 16px; font-weight: 700; color: #17252d; font-family: 'Plus Jakarta Sans', sans-serif; white-space: nowrap; line-height: 1.2;">Appointment Diary</h4>
     </div>
+
+    <!-- Center: Date Navigator -->
+    <div class="date-navigator" style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap; position: relative; margin-bottom: 0; flex-shrink: 1;">
+        <button class="nav-btn" id="prev-btn" style="padding: 4px 8px; font-size: 11px; display: inline-flex; align-items: center; justify-content: center;"><i class="fa-solid fa-chevron-left"></i></button>
+        <div class="current-date-range" id="date-range-display" style="font-size: 13.5px; font-weight: 700; color: #17252d; min-width: 175px; text-align: center; line-height: 1.2;">Loading...</div>
+        <button class="nav-btn" id="next-btn" style="padding: 4px 8px; font-size: 11px; display: inline-flex; align-items: center; justify-content: center;"><i class="fa-solid fa-chevron-right"></i></button>
+
+        <button class="nav-btn" id="today-btn" style="padding: 4px 10px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center;">Today</button>
+
+        <button class="btn-icon-only" id="datepicker-trigger-btn" title="Pick Date" style="padding: 4px 8px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center;">
+            <i class="fa-regular fa-calendar"></i>
+        </button>
+        <input type="date" id="calendar-date-picker" style="position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0;">
+    </div>
+
+    <!-- Right: Export Report & New Appointment Buttons -->
+    <div class="header-right" style="display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-bottom: 0;">
+
+        <!-- Export Dropdown -->
+        <div class="dropdown export-btn-shadow" style="display: inline-block; margin-bottom: 0;">
+            <button class="btn dropdown-toggle shadow-sm" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: #fff; color:#17252d; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 10px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
+                <i class="fa-solid fa-file-excel" style="color: #137333 !important;"></i> Export
+            </button>
+            <ul class="dropdown-menu p-3 shadow-sm" aria-labelledby="exportDropdown" style="width: 230px; font-size: 13px;">
+                <li><a class="dropdown-item fw-bold export-option" href="#" data-range="today"><i class="fa-solid fa-calendar-day me-2 text-primary"></i> Today</a></li>
+                <li>
+                    <a class="dropdown-item fw-bold export-option d-flex align-items-center py-2" href="#" data-range="yesterday">
+                        <div style="width: 24px; text-align: center; display: flex; justify-content: center;">
+                            <span class="d-inline-flex align-items-center justify-content-center bg-success text-white rounded-circle" style="width: 16px; height: 16px;">
+                                <i class="fa-solid fa-arrow-right-long" style="font-size: 9px;"></i>
+                            </span>
+                        </div>
+                        Yesterday
+                    </a>
+                </li>
+                <li><a class="dropdown-item fw-bold export-option" href="#" data-range="tomorrow"><i class="fa-solid fa-calendar-plus me-2 text-success"></i> Tomorrow</a></li>
+                <li><a class="dropdown-item fw-bold export-option" href="#" data-range="week"><i class="fa-solid fa-calendar-week me-2 text-warning"></i> This Week</a></li>
+                <li>
+                    <hr class="dropdown-divider">
+                </li>
+                <li>
+                    <label class="form-label fw-bold mb-1" style="font-size: 11px;">Custom Range:</label>
+                    <input type="date" id="export-start-date" class="form-control form-control-sm mb-2">
+                    <input type="date" id="export-end-date" class="form-control form-control-sm mb-2">
+                    <button type="button" class="btn btn-sm btn-primary w-100" id="btn-custom-export" style="font-size: 12px;">Download Excel</button>
+                </li>
+            </ul>
+        </div>
+
+        <!-- New Appointment Button -->
+        <button class="btn" style="background: #0d7774; color:#fff; font-weight: 600; border-radius: 6px; padding: 4px 10px; font-size: 12px; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;" id="new-appointment-btn">
+            <i class="fa-solid fa-plus"></i> New Appointment
+        </button>
+    </div>
+</div>
 
     <!-- Legends Bar -->
     <div class="legend-bar">

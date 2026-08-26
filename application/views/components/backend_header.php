@@ -106,11 +106,11 @@
                         <?= lang('account') ?>
                     </a>
                     <?php if (can('view', PRIV_SYSTEM_SETTINGS) || (isset($_SESSION['user_id']) && $_SESSION['user_id'] == 210)): ?>
-    <a class="dropdown-item" href="<?= site_url('calendar/logs_view') ?>">
-        <i class="fas fa-user me-2"></i>
-        Action Track
-    </a>
-<?php endif; ?>
+                        <a class="dropdown-item" href="<?= site_url('calendar/logs_view') ?>">
+                            <i class="fas fa-user me-2"></i>
+                            Action Track
+                        </a>
+                    <?php endif; ?>
                     <a class="dropdown-item d-none" href="<?= site_url('about') ?>">
                         <i class="fas fa-info-circle me-2"></i>
                         <?= lang('about') ?>

@@ -41,7 +41,8 @@
 
 <script src="<?= asset_url('assets/vendor/jquery/jquery.min.js') ?>"></script>
 <script src="<?= asset_url('assets/vendor/@popperjs-core/popper.min.js') ?>"></script>
-<script src="<?= asset_url('assets/vendor/bootstrap/bootstrap.min.js') ?>"></script>
+<!-- <script src="<?= asset_url('assets/vendor/bootstrap/bootstrap.min.js') ?>"></script> -->
+ <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="<?= asset_url('assets/vendor/moment/moment.min.js') ?>"></script>
 <script src="<?= asset_url('assets/vendor/moment-timezone/moment-timezone-with-data.min.js') ?>"></script>
 <script src="<?= asset_url('assets/vendor/@fortawesome-fontawesome-free/fontawesome.min.js') ?>"></script>

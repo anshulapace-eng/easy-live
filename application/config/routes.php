@@ -171,7 +171,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS
 | pattern and are explicitly defined. 
 |
 */
-
+$route['dashboard'] = 'dashboard/index';
 $route['whatsapp/send']['post'] = 'whatsapp/send';
 
 $route['db-backup']='databasebackup';
