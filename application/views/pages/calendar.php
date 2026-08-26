@@ -1786,11 +1786,28 @@
                 cleanPhone = '91' + cleanPhone;
             }
 
-            let whatsappMessage = `Your Appointment with Dr. Monashis Sahu (Endocrinologist) has been scheduled for :
+            // let whatsappMessage = `Your Appointment with Dr. Monashis Sahu (Endocrinologist) has been scheduled for :
+            //     Date: ${formattedStartDate}
+            //     Time: ${formattedStartTime}
+            //     Location: Dr. Sahu's Clinic, E 339, GK1, New Delhi
+            //     Map location : https://maps.app.goo.gl/Z7oFhN7qNqTSPofV9`;
+            let whatsappMessage = '';
+            let activeLocation = '';
+
+            if (appointmentType === 'video' || appointmentType === 'video_call') {
+                activeLocation = 'Video platform';
+                whatsappMessage = `Your Appointment with Dr. Monashis Sahu (Endocrinologist) has been scheduled for :
+                Date: ${formattedStartDate}
+                Time: ${formattedStartTime}
+                Location: Video platform`;
+            } else {
+                activeLocation = "Dr. Sahu's Clinic, E 339, GK1, New Delhi";
+                whatsappMessage = `Your Appointment with Dr. Monashis Sahu (Endocrinologist) has been scheduled for :
                 Date: ${formattedStartDate}
                 Time: ${formattedStartTime}
                 Location: Dr. Sahu's Clinic, E 339, GK1, New Delhi
                 Map location : https://maps.app.goo.gl/Z7oFhN7qNqTSPofV9`;
+            }
             let encodedMessage = encodeURIComponent(whatsappMessage);
             // $modal.find('.btn-send-whatsapp').attr('href', `https://wa.me/${cleanPhone}?text=${encodedMessage}`);
             $modal.find('.btn-send-whatsapp').attr('href', `https://wa.me/${cleanPhone}`);
