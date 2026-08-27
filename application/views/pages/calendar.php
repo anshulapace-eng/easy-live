@@ -745,6 +745,105 @@
     opacity: 0.6;
     pointer-events: none;
 }
+
+/* 1. General Body & Table Font Reduction */
+    .appointment-diary-wrapper, 
+    .diary-table td, 
+    .diary-table th,
+    .diary-sidebar,
+    .legend-bar {
+        font-size: 10.5px !important;
+    }
+
+    /* 2. Header & Date Navigator Compactness */
+    .header-left h4 {
+        font-size: 14px !important;
+    }
+    .current-date-range {
+        font-size: 12.5px !important;
+        min-width: 150px !important;
+    }
+    .nav-btn, #today-btn, #datepicker-trigger-btn {
+        font-size: 11px !important;
+        padding: 3px 6px !important;
+    }
+
+    /* 3. Table Header & Time Slots */
+    .diary-table th {
+        height: 32px !important;
+        padding: 2px !important;
+    }
+    .th-day-name {
+        font-size: 12px !important;
+    }
+    .th-day-date {
+        font-size: 11px !important;
+    }
+    .time-cell {
+        font-size: 10px !important;
+        width: 65px !important;
+    }
+
+    /* 4. Appointment Cards Compactness */
+    .apt-card {
+        padding: 2px 4px !important;
+        font-size: 10px !important;
+        margin: 0.5px 0 !important;
+    }
+    .apt-name {
+        font-size: 10px !important;
+    }
+    .apt-right-icons i, .apt-left-info i {
+        font-size: 9.5px !important;
+    }
+
+    /* 5. Sidebar Mini Calendar & Controls */
+    .mini-cal-grid {
+        font-size: 10px !important;
+    }
+    .mini-cal-date {
+        font-size: 10px !important;
+        padding: 2px 0 !important;
+    }
+    .mini-calendar-header {
+        font-size: 12px !important;
+        margin-bottom: 8px !important;
+    }
+    .sidebar-section-title {
+        font-size: 11px !important;
+        margin-top: 8px !important;
+        margin-bottom: 4px !important;
+    }
+    .view-toggle-btn {
+        font-size: 11px !important;
+        padding: 4px !important;
+    }
+    .staff-box {
+        font-size: 11px !important;
+        padding: 4px 8px !important;
+    }
+
+    /* 6. Legends Bar Compactness */
+    .legend-bar {
+        font-size: 10px !important;
+        padding: 6px 16px !important;
+        gap: 16px !important;
+    }
+    .legend-item {
+        gap: 4px !important;
+    }
+    .legend-bar span {
+        width: 10px !important;
+        height: 10px !important;
+    }
+
+    /* 7. Modals Font Scaling */
+    #appointment-details-modal .modal-title {
+        font-size: 12px !important;
+    }
+    #appointment-details-modal .modal-body {
+        font-size: 10px !important;
+    }
 </style>
 
 <div id="toast-message" class="custom-toast">
@@ -787,6 +886,9 @@
             font-size: 11.5px !important;
         }
     }
+
+
+    
 </style>
 
 <div class="diary-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 8px 16px; gap: 8px;">
@@ -813,6 +915,11 @@
 
     <!-- Right: Export Report & New Appointment Buttons -->
     <div class="header-right" style="display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-bottom: 0;">
+        
+        <!-- Zaroori Hidden Triggers for Auto-Refresh -->
+        <button id="reload-appointments" style="display: none;"></button>
+        <a href="#" id="insert-appointment" style="display: none;"></a>
+        <a href="#" id="insert-unavailability" style="display: none;"></a>
 
         <!-- Export Dropdown -->
         <div class="dropdown export-btn-shadow" style="display: inline-block; margin-bottom: 0;">

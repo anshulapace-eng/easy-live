@@ -1,4 +1,4 @@
-<?php extend('layouts/backend_layout'); ?>
+<?php extend('layouts/backend_layout1'); ?>
 
 <?php section('content'); ?>
 <!-- FontAwesome & Google Fonts -->
@@ -65,6 +65,86 @@
         border-radius: 6px;
         color: #334155;
     }
+
+  
+    .logs-card {
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        background: #ffffff;
+        padding: 12px !important;
+    }
+    
+    /* Table ko content ke hisab se auto-fit karne ke liye width: auto aur max-width */
+    #activityLogsTable {
+        width: auto !important;
+        max-width: 100%;
+        margin: 0 auto;
+    }
+
+    .table-custom th {
+        background-color: #f1f5f9 !important;
+        color: #475569 !important;
+        font-weight: 700;
+        font-size: 10px !important; /* Th ka font size aur chhota kar diya */
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 6px 10px !important; /* Padding kam ki */
+        height: 30px !important;
+    }
+    
+    .table-custom td {
+        vertical-align: middle;
+        padding: 5px 10px !important; /* Rows ki padding kam ki */
+        color: #1e293b;
+        font-size: 11.5px !important; /* Content font size chhota */
+        border-bottom: 1px solid #f1f5f9;
+        white-space: nowrap; /* Text ko ek hi line me rakhne ke liye taaki width content ke mutabiq adjust ho */
+    }
+
+    /* Details column ko thoda wrap hone dena agar lamba ho */
+    /* .table-custom td:nth-child(6) {
+        white-space: normal; 
+        max-width: 170.881px;
+    } */
+
+    .badge-action {
+        font-weight: 600;
+        padding: 3px 8px !important;
+        border-radius: 6px;
+        font-size: 10px !important;
+    }
+
+    .dataTables_wrapper .dataTables_filter input,
+    .dataTables_wrapper .dataTables_length select {
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+        padding: 4px 8px;
+        font-size: 11.5px;
+    }
+
+    .dataTables_wrapper .dataTables_length select {
+        padding-right: 25px !important;
+        text-align-last: center;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button.active .page-link {
+        background-color: #5A3FEE !important;
+        border-color: #5A3FEE !important;
+        color: white !important;
+        border-radius: 6px;
+    }
+    
+    .dataTables_wrapper .dataTables_paginate .paginate_button .page-link {
+        border-radius: 6px;
+        color: #334155;
+        font-size: 11.5px;
+    }
+
+    .dataTables_info {
+        font-size: 11.5px !important;
+    }
 </style>
 
 <div class="container py-4" style="max-width: 1150px;">
@@ -94,7 +174,7 @@
                                 <th class="ps-3" style="width: 60px;">S.No</th>
                                 <th>Staff Name</th>
                                 <th>Customer Name</th>
-                                <th>Customer Phone</th>
+                                <th style="width: 100px !important;">Customer Phone</th>
                                 <th>Action Performed</th>
                                 <th>Details</th>
                                 <th class="pe-3">Timestamp</th>

@@ -46,7 +46,7 @@
             --text-light-gray: #8a99a5;
             --bg-body: #f4f7f9;
             --bg-sidebar: #ffffff;
-            --sidebar-width: 270px;
+            --sidebar-width: 250px;
             --sidebar-collapsed-width: 85px;
             --header-height: 70px;
             --card-border: #e1e8ec;
