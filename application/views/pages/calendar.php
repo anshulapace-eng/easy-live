@@ -1823,9 +1823,20 @@
             return `${String(hour).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
         }
 
+        // function findAppointmentAt(date, time) {
+        //     const slotTime = formatTimeSlotTo24(time);
+        //     return appointmentsData.find((appointment) => appointment.start_datetime.indexOf(`${date} ${slotTime}`) === 0);
+        // }
+        
         function findAppointmentAt(date, time) {
             const slotTime = formatTimeSlotTo24(time);
-            return appointmentsData.find((appointment) => appointment.start_datetime.indexOf(`${date} ${slotTime}`) === 0);
+            return appointmentsData.find((appointment) => {
+                const isCanceled = Number(appointment.is_canceled) === 1 || appointment.status?.toLowerCase() === 'canceled';
+                if (isCanceled) {
+                    return false;
+                }
+                return appointment.start_datetime.indexOf(`${date} ${slotTime}`) === 0;
+            });
         }
 
         function findUnavailabilityAt(date, time) {
@@ -1930,11 +1941,11 @@
             let activeLocation = '';
 
             if (appointmentType === 'video' || appointmentType === 'video_call') {
-                activeLocation = 'Video platform';
+                activeLocation = 'Video Call';
                 whatsappMessage = `Your Appointment with Dr. Monashis Sahu (Endocrinologist) has been scheduled for :
                 Date: ${formattedStartDate}
                 Time: ${formattedStartTime}
-                Location: Video platform`;
+                Location: Video Call`;
             } else {
                 activeLocation = "Dr. Sahu's Clinic, E 339, GK1, New Delhi";
                 whatsappMessage = `Your Appointment with Dr. Monashis Sahu (Endocrinologist) has been scheduled for :

@@ -739,7 +739,7 @@ class Appointments_model extends EA_Model
         string $end_datetime,
         ?int $exclude_appointment_id = null,
     ): bool {
-        $this->db->select('id')->from('appointments')->where('id_users_provider', $provider_id);
+        $this->db->select('id')->from('appointments')->where('id_users_provider', $provider_id)->where('is_canceled !=', 1);
 
         if ($exclude_appointment_id) {
             $this->db->where('id !=', $exclude_appointment_id);
