@@ -288,8 +288,8 @@ if (!empty($customers)):
         <div class="modal fade" id="customermodal_<?= $data['id']; ?>" tabindex="-1" aria-labelledby="customermodalLabel_<?= $data['id']; ?>" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-lg">
                 <div class="modal-content border-0 shadow-lg">
-                    <div class="modal-header border-bottom px-4 py-3">
-                        <h5 class="modal-title fw-bold text-dark" id="customermodalLabel_<?= $data['id']; ?>" style="font-size: 16px;">
+                    <div class="modal-header border-bottom px-2 py-2">
+                        <h5 class="modal-title fw-bold text-white" id="customermodalLabel_<?= $data['id']; ?>" style="font-size: 16px;">
                             <i class="fa-solid fa-pen-to-square text-primary me-2"></i> Edit Appointment & Customer Details
                         </h5>
                         <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
