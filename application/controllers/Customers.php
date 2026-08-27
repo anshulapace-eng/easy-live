@@ -20,7 +20,7 @@
  */
 class Customers extends EA_Controller
 {
-    public array $allowed_customer_fields = [
+   public array $allowed_customer_fields = [
         'id',
         'first_name',
         'last_name',
@@ -65,13 +65,135 @@ class Customers extends EA_Controller
 
     /**
      * Render the backend customers page.
-     *
-     * On this page admin users will be able to manage customers, which are eventually selected by customers during the
-     * booking process.
      */
-    public function index(): void
+   public function index(): void
     {
         method('get');
+
+        // Handle AJAX request for dynamic time slots based on the selected date
+        $input_date = $this->input->get('date');
+        if (!empty($input_date)) {
+            $target_date = $input_date;
+            $current_day = strtolower(date('l', strtotime($target_date)));
+
+            $working_plan_json = setting('company_working_plan');
+            $working_plan = json_decode($working_plan_json, true);
+
+            $time_slots = [];
+
+            $this->db->where('DATE(start_datetime)', $target_date);
+            $this->db->where_not_in('status', ['Canceled', 'canceled', 'CANCELED']);
+            $existing_appointments = $this->db->get('ea_appointments')->result_array();
+
+            $is_today = ($target_date === date('Y-m-d'));
+            $current_time_hhmm = date('H:i');
+
+            if (isset($working_plan[$current_day]) && is_array($working_plan[$current_day])) {
+                $start_time = '09:00'; 
+                $end_time = $working_plan[$current_day]['end'];
+                $breaks = $working_plan[$current_day]['breaks'] ?? [];
+
+                $current_time = strtotime($start_time);
+                $last_time = strtotime($end_time);
+
+                while ($current_time < $last_time) {
+                    if ($current_time >= strtotime('10:00') && $current_time < strtotime('10:30')) {
+                        $current_time = strtotime('10:30');
+                        if ($current_time >= $last_time) break;
+                        continue;
+                    }
+
+                    $active_break = null;
+                    foreach ($breaks as $break) {
+                        $break_start = strtotime($break['start']);
+                        $break_end = strtotime($break['end']);
+
+                        if ($current_time >= $break_start && $current_time < $break_end) {
+                            $active_break = $break;
+                            break;
+                        }
+                    }
+
+                    if ($active_break) {
+                        $next_time = strtotime($active_break['end']);
+                        $slot_start = date('H:i', strtotime($active_break['start']));
+                        $slot_end = date('H:i', strtotime($active_break['end']));
+
+                        $time_slots[] = [
+                            'start'     => $slot_start,
+                            'end'       => $slot_end,
+                            'label'     => $slot_start . ' - ' . $slot_end,
+                            'available' => false,
+                            'status'    => 'break',
+                            'type'      => 'none'
+                        ];
+                    } else {
+                        $next_time = strtotime('+15 minutes', $current_time);
+
+                        if ($next_time > $last_time) {
+                            $next_time = $last_time;
+                        }
+
+                        foreach ($breaks as $break) {
+                            $break_start = strtotime($break['start']);
+                            if ($current_time < $break_start && $next_time > $break_start) {
+                                $next_time = $break_start;
+                                break;
+                            }
+                        }
+
+                        $slot_start = date('H:i', $current_time);
+                        $slot_end = date('H:i', $next_time);
+
+                        if ($slot_start === $slot_end) {
+                            $current_time = $next_time;
+                            continue;
+                        }
+
+                        $is_past = false;
+                        if ($is_today && $slot_start <= $current_time_hhmm) {
+                            $is_past = true;
+                        }
+
+                        $slot_start_dt = $target_date . ' ' . $slot_start . ':00';
+                        $slot_end_dt   = $target_date . ' ' . $slot_end . ':00';
+                        $is_booked = false;
+
+                        foreach ($existing_appointments as $appt) {
+                            if ($slot_start_dt < $appt['end_datetime'] && $slot_end_dt > $appt['start_datetime']) {
+                                $is_booked = true;
+                                break;
+                            }
+                        }
+
+                        $is_available = (!$is_booked && !$is_past);
+                        $status = 'available';
+
+                        if ($is_past) {
+                            $status = 'past';
+                        } elseif ($is_booked) {
+                            $status = 'booked';
+                        }
+
+                        $slot_type = ($current_time < strtotime('10:00')) ? 'video' : 'in-clinic';
+
+                        $time_slots[] = [
+                            'start'     => $slot_start,
+                            'end'       => $slot_end,
+                            'label'     => $slot_start . ' - ' . $slot_end,
+                            'available' => $is_available,
+                            'status'    => $status,
+                            'type'      => $slot_type
+                        ];
+                    }
+
+                    $current_time = $next_time;
+                }
+            }
+
+            echo json_encode($time_slots);
+            exit;
+        }
 
         session(['dest_url' => site_url('customers')]);
 
@@ -81,61 +203,55 @@ class Customers extends EA_Controller
             if ($user_id) {
                 abort(403, 'Forbidden');
             }
-
             redirect('login');
-
             return;
         }
 
         $role_slug = session('role_slug');
-
         $date_format = setting('date_format');
         $time_format = setting('time_format');
-        $require_first_name = setting('require_first_name');
-        $require_last_name = setting('require_last_name');
-        $require_email = setting('require_email');
-        $require_phone_number = setting('require_phone_number');
-        $require_address = setting('require_address');
-        $require_city = setting('require_city');
-        $require_zip_code = setting('require_zip_code');
 
         $secretary_providers = [];
-
         if ($role_slug === DB_SLUG_SECRETARY) {
             $secretary = $this->secretaries_model->find($user_id);
-
-            $secretary_providers = $secretary['providers'];
+            $secretary_providers = $secretary['providers'] ?? [];
         }
 
-        script_vars([
-            'user_id' => $user_id,
-            'role_slug' => $role_slug,
+        $this->db->select('
+            ea_users.*, 
+            ea_appointments.id as appointment_id,
+            ea_appointments.start_datetime,
+            ea_appointments.end_datetime,
+            ea_appointments.id_users_provider,
+            ea_appointments.status as appointment_status,
+            provider.first_name as provider_first_name,
+            provider.last_name as provider_last_name,
+            ea_services.name as service_name
+        ');
+        $this->db->from('ea_users');
+        $this->db->join('ea_appointments', 'ea_appointments.id_users_customer = ea_users.id', 'left');
+        $this->db->join('ea_users as provider', 'provider.id = ea_appointments.id_users_provider', 'left');
+        $this->db->join('ea_services', 'ea_services.id = ea_appointments.id_services', 'left');
+
+        if ($role_slug === DB_SLUG_PROVIDER) {
+            $this->db->where('ea_appointments.id_users_provider', $user_id);
+        } elseif ($role_slug === DB_SLUG_SECRETARY) {
+            if (!empty($secretary_providers)) {
+                $this->db->where_in('ea_appointments.id_users_provider', $secretary_providers);
+            } else {
+                $this->db->where('1 = 0', null, false);
+            }
+        }
+
+        $this->db->order_by('ea_users.id', 'DESC');
+        $query = $this->db->get();
+        $raw_results = $query->result_array();
+
+        $this->load->view('pages/customers', [
+            'customers'   => $raw_results,
             'date_format' => $date_format,
-            'time_format' => $time_format,
-            'timezones' => $this->timezones->to_array(),
-            'secretary_providers' => $secretary_providers,
-            'default_language' => setting('default_language'),
-            'default_timezone' => setting('default_timezone'),
+            'time_format' => $time_format
         ]);
-
-        html_vars([
-            'page_title' => lang('customers'),
-            'active_menu' => PRIV_CUSTOMERS,
-            'user_display_name' => $this->accounts->get_user_display_name($user_id),
-            'timezones' => $this->timezones->to_array(),
-            'grouped_timezones' => $this->timezones->to_grouped_array(),
-            'privileges' => $this->roles_model->get_permissions_by_slug($role_slug),
-            'require_first_name' => $require_first_name,
-            'require_last_name' => $require_last_name,
-            'require_email' => $require_email,
-            'require_phone_number' => $require_phone_number,
-            'require_address' => $require_address,
-            'require_city' => $require_city,
-            'require_zip_code' => $require_zip_code,
-            'available_languages' => config('available_languages'),
-        ]);
-
-        $this->load->view('pages/customers');
     }
 
     /**
