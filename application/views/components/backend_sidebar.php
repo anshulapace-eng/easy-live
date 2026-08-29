@@ -74,13 +74,13 @@
                     <p style="font-size: 10px; color: #586b7d; margin: 0; font-weight: 500; line-height: 1.2;">Online Appointment Scheduler</p>
                 </div>
             </div>
-            <div class="chamber-arrow">
+            <!-- <div class="chamber-arrow">
                 <i class='bx bx-chevron-down'></i>
-            </div>
+            </div> -->
         </a>
 
         <!-- Smooth Dropdown Panel -->
-        <div class="chamber-dropdown-panel" id="chamberDropdownPanel">
+        <!-- <div class="chamber-dropdown-panel" id="chamberDropdownPanel">
             <div class="panel-header" style="padding-bottom: 8px; margin-bottom: 8px;">
                 <div class="panel-title-box">
                     <span class="panel-subtitle" style="font-size: 9px; font-weight: 600; letter-spacing: 0.4px; color: #94a3b8;">YOUR DOCTLY ACCOUNTS</span>
@@ -102,7 +102,7 @@
             <a href="#" class="panel-action-item" style="padding: 7px 10px; font-size: 12.5px; font-weight: 400; gap: 8px;"><i class='bx bx-buildings' style="font-size: 16px;"></i> Manage Chambers</a>
             <a href="#" class="panel-action-item" style="padding: 7px 10px; font-size: 12.5px; font-weight: 400; gap: 8px;"><i class='bx bx-user' style="font-size: 16px;"></i> Manage Profile</a>
             <a href="#" class="panel-action-item" style="padding: 7px 10px; font-size: 12.5px; font-weight: 400; gap: 8px;"><i class='bx bx-log-out' style="font-size: 16px;"></i> Sign Out</a>
-        </div>
+        </div> -->
     </div>
 
     <!-- Sidebar Navigation Menu -->
@@ -141,7 +141,7 @@
                 </ul>
             </li>
 
-            <li class="has-submenu">
+            <!-- <li class="has-submenu">
                 <a href="#">
                     <i class='bx bx-calendar'></i> <span>Appointments</span>
                     <i class='bx bx-chevron-down arrow'></i>
@@ -150,7 +150,7 @@
                     <li><a href="#"><i class='bx bx-right-arrow-alt'></i> Create New</a></li>
                     <li><a href="#"><i class='bx bx-right-arrow-alt'></i> List by Date</a></li>
                 </ul>
-            </li>
+            </li> -->
 
              <?php $hidden = can('view', PRIV_SYSTEM_SETTINGS) || can('view', PRIV_USER_SETTINGS) ? '' : 'd-none'; ?>
              <?php if (can('view', PRIV_SYSTEM_SETTINGS)): ?>

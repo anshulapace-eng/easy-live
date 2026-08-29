@@ -446,6 +446,23 @@ class Appointments_model extends EA_Model
         return $result['attendants_number'];
     }
 
+
+    public function get_today_upcoming_appointments(): array
+    {
+        $today = date('Y-m-d');
+
+        return $this->db
+            ->select('ea_appointments.*, CONCAT(customers.first_name, " ", customers.last_name) AS patient_name, services.name AS service_name')
+            ->from('ea_appointments')
+            ->join('ea_users AS customers', 'customers.id = ea_appointments.id_users_customer', 'left')
+            ->join('ea_services AS services', 'services.id = ea_appointments.id_services', 'left')
+            ->where('DATE(ea_appointments.start_datetime)', $today)
+            ->where('ea_appointments.is_unavailability', false)
+            ->order_by('ea_appointments.start_datetime', 'ASC')
+            ->get()
+            ->result();
+    }
+
     /**
      * Get the query builder interface, configured for use with the appointments table.
      *

@@ -6,6 +6,8 @@ class Dashboard extends EA_Controller
     {
         parent::__construct();
         $this->load->database();
+        // यहाँ मॉडल को लोड किया गया है ताकि यह null न रहे
+        $this->load->model('appointments_model', 'appointment_model');
     }
 
     public function index(): void
@@ -51,7 +53,11 @@ class Dashboard extends EA_Controller
         $data['total_patients'] = $this->db->where('id_roles', 3)
             ->count_all_results('ea_users');
 
-        // View load karein
+        $data['upcoming_appointments'] = $this->appointment_model->get_today_upcoming_appointments();
+
+       
+
+        
         $this->load->view('pages/dashboard', $data);
     }
 }

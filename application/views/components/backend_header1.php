@@ -1,3 +1,4 @@
+
 <header class="header" id="header">
     <div class="header-left">
         <button class="toggle-btn" id="sidebarToggle">
@@ -17,9 +18,10 @@
                 <i class='bx bx-plus-circle text-primary'></i> <span>Create As New</span> <i class='bx bx-chevron-down ms-1'></i>
             </button>
             <ul class="dropdown-menu dropdown-menu-end mt-2">
-                <li><a class="dropdown-item" href="#"><i class='bx bx-file me-2 text-muted'></i> Prescription</a></li>
-                <li><a class="dropdown-item" href="<?= site_url('providers') ?>"><i class='bx bx-user-plus me-2 text-muted'></i> Staff</a></li>
-                <li><a class="dropdown-item" href="<?= site_url('customers') ?>"><i class='bx bx-user me-2 text-muted'></i> Patient</a></li>
+                <!-- <li><a class="dropdown-item" href="#"><i class='bx bx-file me-2 text-muted'></i> Prescription</a></li> -->
+                <li><a class="dropdown-item" href="<?= site_url('providers') ?>"><i class='bx bx-user-plus me-2 text-muted'></i> Providers</a></li>
+                <li><a class="dropdown-item" href="<?= site_url('secretaries') ?>"><i class='bx bx-user-plus me-2 text-muted'></i> Staff</a></li>
+                <li><a class="dropdown-item" href="<?= site_url('customers') ?>"><i class='bx bx-user me-2 text-muted'></i> Customers</a></li>
                 <li><a class="dropdown-item" href="<?= site_url('calendar') ?>"><i class='bx bx-calendar-plus me-2 text-muted'></i> Appointment</a></li>
             </ul>
         </div>
@@ -28,10 +30,10 @@
             <i class='bx bx-fullscreen'></i>
         </a>
 
-        <a href="#" class="icon-btn" title="Notifications">
+        <!-- <a href="#" class="icon-btn" title="Notifications">
             <i class='bx bx-bell'></i>
             <span class="noti-dot"></span>
-        </a>
+        </a> -->
 
         <!-- User Profile Dropdown -->
           <?php $hidden = can('view', PRIV_SYSTEM_SETTINGS) || can('view', PRIV_USER_SETTINGS) ? '' : 'd-none'; ?>
@@ -45,7 +47,7 @@
                 <li>
                     <div class="px-3 py-2">
                         <h6 class="mb-0 font-weight-bold" style="font-size: 13.5px;"><?= e(vars('user_display_name')) ?></h6>
-                        <small class="text-muted" style="font-size: 11.5px;"><?= session('email') ?? 'admin@doctly.com' ?></small>
+                        <small class="text-muted" style="font-size: 11.5px;"><?= session('role_slug') ?? '' ?></small>
                     </div>
                 </li>
                 <li><hr class="dropdown-divider my-1"></li>

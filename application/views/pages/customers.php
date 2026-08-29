@@ -5,8 +5,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<!-- DataTables Bootstrap 5 CSS -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 
 <!-- Select2 CSS -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -202,11 +200,12 @@
         <div class="col-12">
             <div class="card customers-card">
                 <div class="table-responsive">
-                    <table id="customersTable" class="table table-custom table-striped table-hover w-100">
+                    <table id="dataTable" class="table table-custom table-striped table-hover w-100">
                         <thead>
                             <tr>
                                 <th class="ps-3" style="width: 40px;">S.No</th>
-                                <th>Customer Name</th>
+                                <th>Patient Name</th>
+                                <th>Contact Name</th>
                                 <th>Phone</th>
                                 <th>Assigned Provider</th>
                                 <th>Appointment Date & Time</th>
@@ -222,7 +221,13 @@
                                     <tr>
                                         <td class="ps-3 text-muted"><?= ++$counter; ?></td>
                                         <td>
-                                            <div class="fw-medium text-dark"><?= html_escape(($row['first_name'] ?? '') . ' ' . ($row['last_name'] ?? '')); ?></div>
+                                            <div class="fw-medium text-dark"><?= html_escape(($row['first_name'] ?? '')); ?></div>
+                                            <?php if (!empty($row['email'])): ?>
+                                                <div class="text-muted" style="font-size: 11px;"><?= html_escape($row['email']); ?></div>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <div class="fw-medium text-dark"><?= html_escape(($row['last_name'] ?? '')); ?></div>
                                             <?php if (!empty($row['email'])): ?>
                                                 <div class="text-muted" style="font-size: 11px;"><?= html_escape($row['email']); ?></div>
                                             <?php endif; ?>
@@ -241,7 +246,8 @@
                                                 <?= date('h:i A', strtotime($row['start_datetime'])); ?>
                                                 <?php if (!empty($row['end_datetime'])): ?>
                                                     - <?= date('h:i A', strtotime($row['end_datetime'])); ?>
-                                                <?php endif; ?>
+                                                <?php endif; ?> <br>
+                                                (<?= $row['appointment_status'] ?>)
                                             <?php else: ?>
                                                 <span class="text-muted fst-italic">No Appointment</span>
                                             <?php endif; ?>
@@ -493,9 +499,6 @@ endif;
 <?php end_section('content'); ?>
 
 <?php section('scripts'); ?>
-<!-- DataTables JS & Bootstrap 5 Integration JS -->
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 
 <!-- Select2 JS -->
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -507,19 +510,6 @@ endif;
                 $(this).remove();
             });
         }, 6000);
-
-
-        $('#customersTable').DataTable({
-            "order": [
-                [0, "asc"]
-            ],
-            "pageLength": 10,
-            "language": {
-                "search": "Search customers:",
-                "lengthMenu": "Show _MENU_ entries",
-                "info": "Showing _START_ to _END_ of _TOTAL_ entries"
-            }
-        });
 
         // Initialize Select2 inside Bootstrap Modals properly
         $('.modal').on('shown.bs.modal', function() {

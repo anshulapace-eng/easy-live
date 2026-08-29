@@ -5,8 +5,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<!-- DataTables Bootstrap 5 CSS -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 
 <style>
     body {
@@ -168,7 +166,7 @@
         <div class="col-12">
             <div class="card logs-card p-3">
                 <div class="table-responsive">
-                    <table id="activityLogsTable" class="table table-custom table-hover w-100">
+                    <table id="dataTable" class="table table-custom table-hover w-100">
                         <thead>
                             <tr>
                                 <th class="ps-3" style="width: 60px;">S.No</th>
@@ -249,21 +247,5 @@
 <?php end_section('content'); ?>
 
 <?php section('scripts'); ?>
-<!-- DataTables JS & Bootstrap 5 Integration JS -->
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 
-<script>
-    $(document).ready(function() {
-        $('#activityLogsTable').DataTable({
-            "order": [[ 0, "asc" ]],
-            "pageLength": 10,
-            "language": {
-                "search": "Search logs:",
-                "lengthMenu": "Show _MENU_ entries per page",
-                "info": "Showing _START_ to _END_ of _TOTAL_ activity logs"
-            }
-        });
-    });
-</script>
 <?php end_section('scripts'); ?>
