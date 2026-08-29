@@ -2,10 +2,21 @@
 
 <?php section('content'); ?>
 
+<style>
+    .status-dots {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10px; /* फॉन्ट साइज़ थोड़ा compact किया गया है */
+    white-space: nowrap;
+    margin-top: 5px;
+}
+</style>
 
 <div class="container-fluid">
     <!-- Row 1: Top Stats Cards -->
     <div class="row g-4 mb-4">
+        <!-- Card 1: Today's Appointments -->
         <div class="col-xl-3 col-lg-6 col-md-6">
             <div class="dash-card hover-lift">
                 <div class="dash-card-header">
@@ -14,15 +25,16 @@
                         <i class='bx bx-calendar-event'></i>
                     </div>
                 </div>
-                <div class="dash-number">0</div>
+                <div class="dash-number"><?= $today_appointments ?? 0; ?></div>
                 <div class="status-dots">
-                    <span class="dot dot-done"></span> Done
-                    <span class="dot dot-queue"></span> Queue
-                    <span class="dot dot-cancel"></span> Cancel
+                    <span><span class="dot dot-done"></span> Done: <strong><?= $today_done ?? 0; ?></strong></span>
+                    <span><span class="dot dot-queue"></span> Queue: <strong><?= $today_queue ?? 0; ?></strong></span>
+                    <span><span class="dot dot-cancel"></span> Cancel: <strong><?= $today_cancel ?? 0; ?></strong></span>
                 </div>
             </div>
         </div>
 
+        <!-- Card 2: Total Appointments -->
         <div class="col-xl-3 col-lg-6 col-md-6">
             <div class="dash-card hover-lift">
                 <div class="dash-card-header">
@@ -31,11 +43,12 @@
                         <i class='bx bx-clipboard'></i>
                     </div>
                 </div>
-                <div class="dash-number">0</div>
+                <div class="dash-number"><?= $total_appointments ?? 0; ?></div>
                 <div class="dash-subtitle">Total appointments</div>
             </div>
         </div>
 
+        <!-- Card 3: Staffs -->
         <div class="col-xl-3 col-lg-6 col-md-6">
             <div class="dash-card hover-lift">
                 <div class="dash-card-header">
@@ -44,11 +57,12 @@
                         <i class='bx bx-share-alt'></i>
                     </div>
                 </div>
-                <div class="dash-number">0</div>
+                <div class="dash-number"><?= $total_staffs ?? 0; ?></div>
                 <div class="dash-subtitle">Active staff members</div>
             </div>
         </div>
 
+        <!-- Card 4: Patients -->
         <div class="col-xl-3 col-lg-6 col-md-6">
             <div class="dash-card hover-lift">
                 <div class="dash-card-header">
@@ -57,7 +71,7 @@
                         <i class='bx bx-group'></i>
                     </div>
                 </div>
-                <div class="dash-number">0</div>
+                <div class="dash-number"><?= $total_patients ?? 0; ?></div>
                 <div class="dash-subtitle">Registered patients</div>
             </div>
         </div>
@@ -121,6 +135,5 @@
         </div>
     </div>
 </div>
-
 
 <?php end_section('content'); ?>

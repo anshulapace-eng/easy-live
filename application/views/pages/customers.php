@@ -160,19 +160,26 @@
     .input-group-custom .form-select:focus {
         box-shadow: none;
     }
-    .select2-container--bootstrap-5 .select2-results__option {
-    font-size: 12px !important;
-    font-weight: normal !important;
-}
 
-/* Jab koi option select ho jaye, tab box ke andar bhi text 10px aur normal rahe */
-.select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
-    font-size: 12px !important;
-    font-weight: normal !important;
-}
+    .select2-container--bootstrap-5 .select2-results__option {
+        font-size: 12px !important;
+        font-weight: normal !important;
+    }
+
+    .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+        font-size: 12px !important;
+        font-weight: normal !important;
+    }
 </style>
 
 <div class="container py-4" style="max-width: 1100px;">
+
+    <?php if (session('success')): ?>
+        <div id="success-alert" class="alert alert-success alert-dismissible fade show shadow-sm mb-3" role="alert" style="font-size: 13px; border-radius: 8px;">
+            <i class="fa-solid fa-circle-check me-2"></i><?= session('success'); ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
     <!-- Page Header -->
     <div class="row mb-4 align-items-center">
         <div class="col-sm-8">
@@ -182,9 +189,11 @@
             <p class="text-muted small mb-0">View and manage all registered customers, appointments, and assigned providers.</p>
         </div>
         <div class="col-sm-4 text-sm-end mt-3 mt-sm-0">
-            <a href="<?= site_url('calendar') ?>" class="btn btn-sm btn-light border fw-semibold px-3 py-2 shadow-sm" style="border-radius: 6px;">
-                <i class="fa-solid fa-arrow-left me-1"></i> Back to Calendar
-            </a>
+            <!-- नया Add Customer बटन -->
+            <button type="button" class="btn btn-sm btn-primary fw-semibold px-3 py-2 shadow-sm me-2" data-bs-toggle="modal" data-bs-target="#addCustomerModal" style="border-radius: 6px;">
+                <i class="fa-solid fa-user-plus me-1"></i> Add Customer
+            </button>
+
         </div>
     </div>
 
@@ -255,26 +264,73 @@
     </div>
 </div>
 
+
+<!-- Add New Customer Modal -->
+<div class="modal fade" id="addCustomerModal" tabindex="-1" aria-labelledby="addCustomerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-bottom px-3 py-2 bg-primary text-white">
+                <h5 class="modal-title fw-bold" id="addCustomerModalLabel" style="font-size: 16px;">
+                    <i class="fa-solid fa-user-plus me-2"></i> Add New Customer
+                </h5>
+                <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form action="<?= site_url('customers/store') ?>" method="POST" class="customer-add-form">
+                <input type="hidden" name="csrf_token" id="form_csrf_token">
+
+                <div class="modal-body p-4 bg-light">
+                    <div class="bg-white p-3 rounded-3 border shadow-sm">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label form-label-custom">Patient Name <span class="text-danger">*</span></label>
+                                <input type="text" name="customer[first_name]" id="first-name1" class="form-control form-control-custom" placeholder="Enter patient name">
+                                <span class="text-danger errortext"></span>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label form-label-custom">Contact Name</label>
+                                <div class="form-check form-check-inline m-0">
+                                    <input class="form-check-input same-as-patient-checkbox" type="checkbox">
+                                    <label class="form-check-label text-muted" style="font-size: 11px;">Same as Patient</label>
+                                </div>
+                                <input type="text" name="customer[last_name]" id="last-name1" class="form-control form-control-custom" placeholder="Enter contact name">
+                                <span class="text-danger errortext"></span>
+
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label form-label-custom">Phone Number <span class="text-danger">*</span></label>
+                                <input type="text" name="customer[phone_number]" id="phone-number1" class="form-control form-control-custom" required placeholder="Enter phone number">
+                                <span class="text-danger errortext"></span>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top px-4 py-3 bg-white">
+                    <button type="button" class="btn btn-light border px-4 fw-semibold text-secondary shadow-sm" data-bs-dismiss="modal" style="border-radius: 8px;">Cancel</button>
+                    <button type="submit" class="btn btn-primary px-4 fw-semibold shadow-sm" style="border-radius: 8px;"><i class="fa-solid fa-check me-1"></i> Save Customer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <style>
-    /* Modal ko compact banane ke liye padding kam karna */
     .modal-body {
         padding: 12px 16px !important;
     }
-    
-    /* Box/Card spacing aur padding kam karne ke liye */
+
     .modal-body .bg-white {
         padding: 10px 12px !important;
         margin-bottom: 8px !important;
     }
 
-    /* Form fields ki height aur padding thodi aur choti karna */
     .form-control-custom,
     .form-select-custom {
         padding: 5px 10px !important;
         font-size: 12px !important;
     }
 
-    /* Labels ke niche ka gap kam karna */
     .form-label-custom {
         margin-bottom: 2px !important;
     }
@@ -295,77 +351,79 @@ if (!empty($customers)):
                         <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
 
-                    <form action="<?= site_url('customers/update/' . $data['id']); ?>" method="POST">
+                    <form action="<?= site_url('customers/update') ?>" method="POST" class="customer-update-form">
                         <div class="modal-body p-4 bg-light">
 
                             <!-- Appointment Details Section -->
-                             <?php if (!empty($data['appointment_id'])): ?>
-                            <div class="bg-white p-3 rounded-3 border mb-3 shadow-sm">
-                                <h6 class="fw-bold text-dark mb-3" style="font-size: 14px;">Appointment Details</h6>
-                                <div class="row g-3">
-                                    <div class="col-md-4">
-                                        <label class="form-label form-label-custom">Provider <span class="text-danger">*</span></label>
-                                        <select name="provider_id" class="form-select form-select-custom select2-enable" required>
-                                            <option value="">Select Provider</option>
-                                            <option value="1" <?= (isset($data['id_users_provider']) && $data['id_users_provider'] == 1) ? 'selected' : ''; ?>>Dr. Monashish Sahu</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label form-label-custom">Select Date <span class="text-danger">*</span></label>
-                                        <div class="input-group input-group-custom">
-                                            <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
-                                            <input type="date" name="start_date" id="startDate_<?= $data['id']; ?>" class="form-control appointment-date" value="<?= !empty($data['start_datetime']) ? date('Y-m-d', strtotime($data['start_datetime'])) : ''; ?>" required>
+                            <?php if (!empty($data['appointment_id'])): ?>
+                                <div class="bg-white p-3 rounded-3 border mb-3 shadow-sm">
+                                    <h6 class="fw-bold text-dark mb-3" style="font-size: 14px;">Appointment Details</h6>
+                                    <input type="hidden" value="<?= $data['appointment_id']; ?>" name="appointment_id" id="appointment_id">
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label form-label-custom">Provider <span class="text-danger">*</span></label>
+                                            <select name="provider_id" id="provider_id" class="form-select form-select-custom select2-enable" required>
+                                                <option value="">Select Provider</option>
+                                                <option value="<?= $data['id_users_provider']; ?>" <?= (isset($data['id_users_provider']) && $data['id_users_provider'] == 1) ? 'selected' : ''; ?>>Dr. Monashish Sahu</option>
+                                            </select>
                                         </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label form-label-custom">Select Time Slot <span class="text-danger">*</span></label>
-                                        <div class="input-group input-group-custom">
-                                            <span class="input-group-text"><i class="fa-regular fa-clock"></i></span>
-                                            <select name="start_time" id="startTime_<?= $data['id']; ?>" class="form-select appointment-time" required>
-                                                <?php
-                                                if (!empty($data['start_datetime'])):
-                                                    $start_time_val = date('H:i', strtotime($data['start_datetime']));
-                                                    $start_label = date('H:i', strtotime($data['start_datetime']));
-                                                    $end_label = !empty($data['end_datetime']) ? date('H:i', strtotime($data['end_datetime'])) : '';
-                                                    $display_label = $end_label ? $start_label . ' - ' . $end_label : $start_label;
-                                                ?>
-                                                    <option value="<?= $start_time_val; ?>" selected>
-                                                        <?= $display_label; ?>
-                                                    </option>
-                                                <?php else: ?>
-                                                    <option value="">Choose date first...</option>
-                                                <?php endif; ?>
+                                        <div class="col-md-4">
+                                            <label class="form-label form-label-custom">Select Date <span class="text-danger">*</span></label>
+                                            <div class="input-group input-group-custom">
+                                                <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                                                <input type="date" name="start_date" id="start_date" class="form-control appointment-date" value="<?= !empty($data['start_datetime']) ? date('Y-m-d', strtotime($data['start_datetime'])) : ''; ?>" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label form-label-custom">Select Time Slot <span class="text-danger">*</span></label>
+                                            <div class="input-group input-group-custom">
+                                                <span class="input-group-text"><i class="fa-regular fa-clock"></i></span>
+                                                <select name="start_time" id="start_time" class="form-select appointment-time" required>
+                                                    <?php
+                                                    if (!empty($data['start_datetime'])):
+                                                        $start_time_val = date('H:i', strtotime($data['start_datetime']));
+                                                        $start_label = date('H:i', strtotime($data['start_datetime']));
+                                                        $end_label = !empty($data['end_datetime']) ? date('H:i', strtotime($data['end_datetime'])) : '';
+                                                        $display_label = $end_label ? $start_label . ' - ' . $end_label : $start_label;
+                                                    ?>
+                                                        <option value="<?= $start_time_val; ?>" selected>
+                                                            <?= $display_label; ?>
+                                                        </option>
+                                                    <?php else: ?>
+                                                        <option value="">Choose date first...</option>
+                                                    <?php endif; ?>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label form-label-custom">Status</label>
+                                            <select name="status" id="status" class="form-select form-select-custom">
+                                                <option value="Booked" <?= (isset($data['appointment_status']) && $data['appointment_status'] == 'Booked') ? 'selected' : ''; ?>>Booked</option>
+                                                <option value="Confirmed" <?= (isset($data['appointment_status']) && $data['appointment_status'] == 'Confirmed') ? 'selected' : ''; ?>>Confirmed</option>
+                                                <option value="Rescheduled" <?= (isset($data['appointment_status']) && $data['appointment_status'] == 'Rescheduled') ? 'selected' : ''; ?>>Rescheduled</option>
+                                                <option value="Cancelled" <?= (isset($data['appointment_status']) && $data['appointment_status'] == 'Cancelled') ? 'selected' : ''; ?>>Cancelled</option>
+                                                <option value="Draft" <?= (isset($data['appointment_status']) && $data['appointment_status'] == 'Draft') ? 'selected' : ''; ?>>Draft</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label form-label-custom">Appointment Types <span class="text-danger">*</span></label>
+                                            <select name="appointment_type" id="appointment_type" class="form-select form-select-custom" required>
+                                                <option value="in-clinic" <?= (isset($data['appointment_type']) && $data['appointment_type'] == 'in-clinic') ? 'selected' : ''; ?>>In Clinic (Face to face)</option>
+                                                <option value="video" <?= (isset($data['appointment_type']) && $data['appointment_type'] == 'video') ? 'selected' : ''; ?>>Video Call</option>
                                             </select>
                                         </div>
                                     </div>
-
-                                    <div class="col-md-4">
-                                        <label class="form-label form-label-custom">Status</label>
-                                        <select name="status" class="form-select form-select-custom">
-                                            <option value="Booked" <?= (isset($data['appointment_status']) && $data['appointment_status'] == 'Booked') ? 'selected' : ''; ?>>Booked</option>
-                                            <option value="Confirmed" <?= (isset($data['appointment_status']) && $data['appointment_status'] == 'Confirmed') ? 'selected' : ''; ?>>Confirmed</option>
-                                            <option value="Rescheduled" <?= (isset($data['appointment_status']) && $data['appointment_status'] == 'Rescheduled') ? 'selected' : ''; ?>>Rescheduled</option>
-                                            <option value="Cancelled" <?= (isset($data['appointment_status']) && $data['appointment_status'] == 'Cancelled') ? 'selected' : ''; ?>>Cancelled</option>
-                                            <option value="Draft" <?= (isset($data['appointment_status']) && $data['appointment_status'] == 'Draft') ? 'selected' : ''; ?>>Draft</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="col-md-4">
-                                        <label class="form-label form-label-custom">Appointment Types <span class="text-danger">*</span></label>
-                                        <select name="appointment_type" class="form-select form-select-custom" required>
-                                            <option value="in-clinic" <?= (isset($data['appointment_type']) && $data['appointment_type'] == 'in-clinic') ? 'selected' : ''; ?>>In Clinic (Face to face)</option>
-                                            <option value="video" <?= (isset($data['appointment_type']) && $data['appointment_type'] == 'video') ? 'selected' : ''; ?>>Video Call</option>
-                                        </select>
-                                    </div>
                                 </div>
-                            </div>
                             <?php endif; ?>
 
                             <!-- Customer Details Section -->
                             <div class="bg-white p-3 rounded-3 border shadow-sm">
+                                <input type="hidden" value="<?= $data['id']; ?>" name="customer_id" id="customer_id">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <h6 class="fw-bold text-dark mb-0" style="font-size: 14px;">Customer Details</h6>
-                                    <div class="btn-group btn-group-sm customer-mode-toggle" role="group" data-modal-id="<?= $data['id']; ?>">
+                                    <div class="btn-group btn-group-sm customer-mode-toggle" role="group">
                                         <button type="button" class="btn btn-outline-secondary active btn-new-mode" data-mode="new">
                                             <i class="fa-solid fa-user-plus me-1"></i> New
                                         </button>
@@ -375,16 +433,16 @@ if (!empty($customers)):
                                     </div>
                                 </div>
 
-                                <div class="row g-3 mb-3 select-search-container d-none" id="selectSearchContainer_<?= $data['id']; ?>">
+                                <div class="row g-3 mb-3 select-search-container d-none">
                                     <div class="col-12">
                                         <label class="form-label form-label-custom text-primary fw-bold">Search & Select Customer</label>
-                                        <select id="masterCustomerSelect_<?= $data['id']; ?>" class="form-select form-select-custom master-customer-select">
+                                        <select class="form-select form-select-custom master-customer-select">
                                             <option value="">Select customer from list...</option>
                                             <?php foreach ($customers as $cust): ?>
-                                                <option style="font-size: 10px;" value="<?= $cust['id']; ?>" 
-                                                        data-firstname="<?= html_escape(($cust['first_name'] ?? '')); ?>"
-                                                        data-lastname="<?= html_escape(($cust['last_name'] ?? '')); ?>"  
-                                                        data-phone="<?= html_escape($cust['phone_number'] ?? ''); ?>">
+                                                <option style="font-size: 10px;" value="<?= $cust['id']; ?>"
+                                                    data-firstname="<?= html_escape(($cust['first_name'] ?? '')); ?>"
+                                                    data-lastname="<?= html_escape(($cust['last_name'] ?? '')); ?>"
+                                                    data-phone="<?= html_escape($cust['phone_number'] ?? ''); ?>">
                                                     <?= html_escape(($cust['first_name'] ?? '') . ' ' . ($cust['last_name'] ?? '')) . ' (' . html_escape($cust['phone_number'] ?? 'No Phone') . ')'; ?>
                                                 </option>
                                             <?php endforeach; ?>
@@ -394,27 +452,26 @@ if (!empty($customers)):
 
                                 <div class="row g-3">
                                     <div class="col-md-4">
-                                        <input type="hidden" id="defaultvalue_<?= $data['id']; ?>" 
-                                                data-fname="<?= html_escape($data['first_name'] ?? ''); ?>" 
-                                                data-lname="<?= html_escape($data['last_name'] ?? ''); ?>" 
-                                                data-dphone="<?= html_escape($data['phone_number'] ?? ''); ?>">
+                                        <input type="hidden" class="default-value-holder"
+                                            data-fname="<?= html_escape($data['first_name'] ?? ''); ?>"
+                                            data-lname="<?= html_escape($data['last_name'] ?? ''); ?>"
+                                            data-dphone="<?= html_escape($data['phone_number'] ?? ''); ?>">
                                         <label class="form-label form-label-custom">Patient Name <span class="text-danger">*</span></label>
-                                        <input type="text" name="patient_name" id="patientInput_<?= $data['id']; ?>" class="form-control form-control-custom" value="<?= html_escape(($data['first_name'] ?? '')); ?>" required placeholder="Enter patient name">
+                                        <input type="text" name="first-name" id="first-name" class="form-control form-control-custom patient-input" value="<?= html_escape(($data['first_name'] ?? '')); ?>" required placeholder="Enter patient name">
                                     </div>
                                     <div class="col-md-4">
                                         <div class="d-flex justify-content-between align-items-center mb-1">
                                             <label class="form-label form-label-custom mb-0">Contact Name</label>
                                             <div class="form-check form-check-inline m-0">
-                                                <!-- ID hata di hai, sirf ek class ya common attribute de sakte hain -->
                                                 <input class="form-check-input same-as-patient-checkbox" type="checkbox">
                                                 <label class="form-check-label text-muted" style="font-size: 11px;">Same as Patient</label>
                                             </div>
                                         </div>
-                                        <input type="text" name="contact_name" id="contactInput_<?= $data['id']; ?>" class="form-control form-control-custom" value="<?= html_escape($data['last_name'] ?? ''); ?>" placeholder="Enter contact name">
+                                        <input type="text" name="last-name" id="last-name" class="form-control form-control-custom contact-input" value="<?= html_escape($data['last_name'] ?? ''); ?>" placeholder="Enter contact name">
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label form-label-custom">Phone Number <span class="text-danger">*</span></label>
-                                        <input type="text" name="phone_number" id="phoneInput_<?= $data['id']; ?>" class="form-control form-control-custom" value="<?= html_escape($data['phone_number'] ?? ''); ?>" required placeholder="Enter phone number">
+                                        <input type="text" name="phone-number" id="phone-number" class="form-control form-control-custom phone-input" value="<?= html_escape($data['phone_number'] ?? ''); ?>" required placeholder="Enter phone number">
                                     </div>
                                 </div>
                             </div>
@@ -445,8 +502,17 @@ endif;
 
 <script>
     $(document).ready(function() {
+        setTimeout(function() {
+            $('#success-alert').fadeOut(200, function() {
+                $(this).remove();
+            });
+        }, 6000);
+
+
         $('#customersTable').DataTable({
-            "order": [[0, "asc"]],
+            "order": [
+                [0, "asc"]
+            ],
             "pageLength": 10,
             "language": {
                 "search": "Search customers:",
@@ -456,31 +522,44 @@ endif;
         });
 
         // Initialize Select2 inside Bootstrap Modals properly
-        $('.modal').on('shown.bs.modal', function () {
-            $(this).find('.select2-enable').each(function() {
+        $('.modal').on('shown.bs.modal', function() {
+            let $modal = $(this);
+
+            $modal.find('.select2-enable').each(function() {
                 if (!$(this).hasClass("select2-hidden-accessible")) {
                     $(this).select2({
                         theme: 'bootstrap-5',
-                        dropdownParent: $(this).closest('.modal')
+                        dropdownParent: $modal
                     });
                 }
             });
+
+            let patientInput = $modal.find('input[name="first-name"]');
+            let contactInput = $modal.find('input[name="last-name"]');
+            let checkbox = $modal.find('.same-as-patient-checkbox');
+
+            if (patientInput.val().trim() !== '' && patientInput.val().trim() === contactInput.val().trim()) {
+                checkbox.prop('checked', true);
+                patientInput.off('input.sameAs').on('input.sameAs', function() {
+                    contactInput.val(patientInput.val());
+                });
+            }
         });
 
         // Toggle between 'New' and 'Select' customer modes
-        $('.customer-mode-toggle button').on('click', function() {
+        $(document).on('click', '.customer-mode-toggle button', function() {
             let $group = $(this).closest('.customer-mode-toggle');
-            let modalId = $group.data('modal-id');
+            let $modal = $(this).closest('.modal');
             let mode = $(this).data('mode');
 
             $group.find('button').removeClass('active');
             $(this).addClass('active');
 
-            let searchContainer = $('#selectSearchContainer_' + modalId);
-            let masterSelect = $('#masterCustomerSelect_' + modalId);
-            let patientInput = $('#patientInput_' + modalId);
-            let contactInput = $('#contactInput_' + modalId);
-            let phoneInput = $('#phoneInput_' + modalId);
+            let searchContainer = $modal.find('.select-search-container');
+            let masterSelect = $modal.find('.master-customer-select');
+            let patientInput = $modal.find('input[name="first-name"]');
+            let contactInput = $modal.find('input[name="last-name"]');
+            let phoneInput = $modal.find('input[name="phone-number"]');
 
             if (mode === 'select') {
                 searchContainer.removeClass('d-none');
@@ -488,69 +567,76 @@ endif;
                 if (!masterSelect.hasClass("select2-hidden-accessible")) {
                     masterSelect.select2({
                         theme: 'bootstrap-5',
-                        dropdownParent: $('#customermodal_' + modalId)
+                        dropdownParent: $modal
                     });
                 }
             } else {
-                // Hide search container
                 searchContainer.addClass('d-none');
                 if (masterSelect.hasClass("select2-hidden-accessible")) {
                     masterSelect.val(null).trigger('change');
                 }
 
-                let defaultInput = $('#defaultvalue_' + modalId);
-                    let fName = defaultInput.data('fname');
-                    let lName = defaultInput.data('lname');
-                    let dPhone = defaultInput.data('dphone');
+                let defaultInput = $modal.find('.default-value-holder');
+                let fName = defaultInput.data('fname');
+                let lName = defaultInput.data('lname');
+                let dPhone = defaultInput.data('dphone');
 
-                    
-                    patientInput.val(fName);
-                    contactInput.val(lName);
-                    phoneInput.val(dPhone)
+                patientInput.val(fName);
+                contactInput.val(lName);
+                phoneInput.val(dPhone);
             }
         });
 
-        // Auto-fill values when a customer is chosen from the static dropdown
+
         $(document).on('change', '.master-customer-select', function() {
             let selectedOption = $(this).find(':selected');
-            let modalId = $(this).attr('id').split('_')[1];
-            
+            let $modal = $(this).closest('.modal');
+
             let firstnamename = selectedOption.data('firstname');
             let lastnamename = selectedOption.data('lastname');
             let phone = selectedOption.data('phone');
 
-            
-                $('#patientInput_' + modalId).val(firstnamename);
-                $('#contactInput_' + modalId).val(lastnamename);
-                $('#phoneInput_' + modalId).val(phone);
-            
+            $modal.find('input[name="first-name"]').val(firstnamename);
+            $modal.find('input[name="last-name"]').val(lastnamename);
+            $modal.find('input[name="phone-number"]').val(phone);
         });
 
         $(document).on('change', '.same-as-patient-checkbox', function() {
-    // Current modal ko find karo jisme ye checkbox hai
-    let $modal = $(this).closest('.modal');
-    
-    // Usi modal ke andar ke patient aur contact input ko uthao
-    let patientInput = $modal.find('input[name="patient_name"]');
-    let contactInput = $modal.find('input[name="contact_name"]');
+            let $modal = $(this).closest('.modal');
+            let patientInput = $modal.find('input[name="first-name"]');
+            let contactInput = $modal.find('input[name="last-name"]');
 
-    if ($(this).is(':checked')) {
-        contactInput.val(patientInput.val());
-        
-        patientInput.on('input.sameAs', function() {
-            contactInput.val(patientInput.val());
+
+            let patientInput1 = $modal.find('#first-name1');
+            let contactInput1 = $modal.find('#last-name1');
+
+            if ($(this).is(':checked')) {
+                if (patientInput.length) {
+                    contactInput.val(patientInput.val());
+                    patientInput.on('input.sameAs', function() {
+                        contactInput.val(patientInput.val());
+                    });
+                }
+                if (patientInput1.length) {
+                    contactInput1.val(patientInput1.val());
+                    patientInput1.on('input.sameAs1', function() {
+                        contactInput1.val(patientInput1.val());
+                    });
+                }
+            } else {
+                patientInput.off('input.sameAs');
+                contactInput.val('');
+
+                patientInput1.off('input.sameAs1');
+                contactInput1.val('');
+            }
         });
-    } else {
-        patientInput.off('input.sameAs');
-        contactInput.val(''); 
-    }
-});
 
-        // Dynamic Time Slot Fetcher based on Date Selection inside Modals
-        $('.appointment-date').on('change', function() {
+
+        $(document).on('change', '.appointment-date', function() {
             let selectedDate = $(this).val();
-            let modalId = $(this).attr('id').split('_')[1];
-            let timeSelect = $('#startTime_' + modalId);
+            let $modal = $(this).closest('.modal');
+            let timeSelect = $modal.find('.appointment-time');
 
             if (!selectedDate) return;
 
@@ -559,7 +645,9 @@ endif;
             $.ajax({
                 url: '<?= site_url("customers") ?>',
                 type: 'GET',
-                data: { date: selectedDate },
+                data: {
+                    date: selectedDate
+                },
                 dataType: 'json',
                 success: function(response) {
                     timeSelect.empty();
@@ -581,6 +669,87 @@ endif;
                 }
             });
         });
+
+
+        function validationerror(input, errorMessage, e) {
+            $input.addClass('is-invalid');
+            $input.siblings('.errortext').text(errorMessage);
+            $input.focus();
+            e.preventDefault();
+            return false;
+        }
+
+        // jQuery validation and dynamic form submit handling
+        $(document).on('submit', '.customer-update-form', function(e) {
+            e.preventDefault();
+            let $form = $(this);
+            let $modal = $form.closest('.modal');
+
+            // Clear previous errors
+            $form.find('.is-invalid').removeClass('is-invalid');
+            $modal.find('.custom-error-alert').remove();
+
+            let firstName = $form.find('input[name="first-name"]').val().trim();
+            let phoneNumber = $form.find('input[name="phone-number"]').val().trim();
+            let appointmentId = $form.find('input[name="appointment_id"]').val();
+
+            let data = new FormData($form[0]);
+            data.append('csrf_token', vars('csrf_token'));
+
+            $.ajax({
+                url: $form.attr('action'),
+                type: "POST",
+                dataType: "json",
+                data: data,
+                processData: false,
+                contentType: false,
+                beforeSend: function() {
+                    $form.find('button[type="submit"]').prop("disabled", true).html('<i class="fa-solid fa-spinner fa-spin me-1"></i> Saving...');
+                },
+                success: function(response) {
+                    $form.find('button[type="submit"]').prop("disabled", false).html('<i class="fa-solid fa-check me-1"></i> Save');
+                    if (response && response.success) {
+                        $modal.modal("hide");
+                        location.reload();
+                        setTimeout(function() {
+                            $(".alert-success").fadeOut(200);
+                        }, 6000);
+                        // showToast('updated successfully');
+                    } else {
+                        showToast('something error');
+                        // location.reload();
+                    }
+                },
+                error: function() {
+                    $form.find('button[type="submit"]').prop("disabled", false).html('<i class="fa-solid fa-check me-1"></i> Save');
+                    // location.reload();
+                }
+            });
+        });
+
+        $(document).on('submit', '.customer-add-form', function(e) {
+            let $form = $(this);
+            
+            $form.find('.errortext').text('');
+            $form.find('.form-control').removeClass('is-invalid');
+
+            let $firstNameInput = $('#first-name1');
+            let $phoneInput = $('#phone-number1');
+
+           
+            if ($firstNameInput.val().trim() === '') {
+                return showFieldError($firstNameInput, 'Patient Name is required.', e);
+            }
+
+            if ($phoneInput.val().trim() === '') {
+                return showFieldError($phoneInput, 'Phone Number is required.', e);
+            }
+
+           
+            $('#form_csrf_token').val(vars('csrf_token'));
+        });
+
+
     });
 </script>
 <?php end_section('scripts'); ?>

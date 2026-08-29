@@ -5,7 +5,7 @@ class Dashboard extends EA_Controller
     public function __construct()
     {
         parent::__construct();
-        // Login check ya permissions verify karne ke liye
+        $this->load->database();
     }
 
     public function index(): void
@@ -19,7 +19,39 @@ class Dashboard extends EA_Controller
             return;
         }
 
-        // View load karne ke liye
-        $this->load->view('pages/dashboard');
+        $today = date('Y-m-d');
+
+        // 1. Today's Total Appointments Count
+        $data['today_appointments'] = $this->db->where('DATE(start_datetime)', $today)
+            ->count_all_results('ea_appointments');
+
+    
+        $data['today_done'] = $this->db->where('DATE(start_datetime)', $today)
+            ->where_in('status', ['confirmed', 'Confirmed'])
+            ->count_all_results('ea_appointments');
+
+        
+        $data['today_cancel'] = $this->db->where('DATE(start_datetime)', $today)
+            ->where_in('status', ['canceled', 'Canceled', 'Cancelled'])
+            ->count_all_results('ea_appointments');
+
+        
+        $data['today_queue'] = $this->db->where('DATE(start_datetime)', $today)
+            ->where_in('status', ['Booked', 'booked', 'pending'])
+            ->count_all_results('ea_appointments');
+
+        
+        $data['total_appointments'] = $this->db->count_all('ea_appointments');
+
+      
+        $data['total_staffs'] = $this->db->where_in('id_roles', [2, 4])
+            ->count_all_results('ea_users');
+
+
+        $data['total_patients'] = $this->db->where('id_roles', 3)
+            ->count_all_results('ea_users');
+
+        // View load karein
+        $this->load->view('pages/dashboard', $data);
     }
 }

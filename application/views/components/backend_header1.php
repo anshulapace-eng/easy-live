@@ -6,13 +6,8 @@
     </div>
 
     <div class="header-actions">
-        <a href="#" class="btn-topbar btn-upgrade">
-            <i class='bx bx-diamond'></i> <span>Upgrade</span>
-        </a>
-        <a href="#" class="btn-topbar btn-light-action d-none d-md-flex text-dark">
-            <i class='bx bx-headphone text-primary'></i> <span>Help</span>
-        </a>
-        <a href="<?= site_url('booking') ?>" target="_blank" class="btn-topbar btn-light-action d-none d-lg-flex text-dark">
+        
+        <a href="<?= site_url('home/index') ?>" target="_blank" class="btn-topbar btn-light-action d-none d-lg-flex text-dark">
             <i class='bx bx-calendar-event text-primary'></i> <span>Booking page</span>
         </a>
 

@@ -20,7 +20,7 @@
  */
 class Customers extends EA_Controller
 {
-   public array $allowed_customer_fields = [
+    public array $allowed_customer_fields = [
         'id',
         'first_name',
         'last_name',
@@ -66,7 +66,7 @@ class Customers extends EA_Controller
     /**
      * Render the backend customers page.
      */
-   public function index(): void
+    public function index(): void
     {
         method('get');
 
@@ -89,7 +89,7 @@ class Customers extends EA_Controller
             $current_time_hhmm = date('H:i');
 
             if (isset($working_plan[$current_day]) && is_array($working_plan[$current_day])) {
-                $start_time = '09:00'; 
+                $start_time = '09:00';
                 $end_time = $working_plan[$current_day]['end'];
                 $breaks = $working_plan[$current_day]['breaks'] ?? [];
 
@@ -247,6 +247,10 @@ class Customers extends EA_Controller
         $query = $this->db->get();
         $raw_results = $query->result_array();
 
+        // echo "<pre>";
+        // print_r($raw_results);
+        // die();
+
         $this->load->view('pages/customers', [
             'customers'   => $raw_results,
             'date_format' => $date_format,
@@ -369,81 +373,157 @@ class Customers extends EA_Controller
     /**
      * Store a new customer.
      */
+    // public function store(): void
+    // {
+    //     try {
+    //         method('post');
+
+    //         if (cannot('add', PRIV_CUSTOMERS)) {
+    //             abort(403, 'Forbidden');
+    //         }
+
+    //         if (session('role_slug') !== DB_SLUG_ADMIN && setting('limit_customer_visibility')) {
+    //             abort(403);
+    //         }
+
+    //         check('customer', 'array');
+
+    //         $customer = request('customer');
+
+    //         $this->customers_model->only($customer, $this->allowed_customer_fields);
+
+    //         $this->customers_model->optional($customer, $this->optional_customer_fields);
+
+    //         $customer_id = $this->customers_model->save($customer);
+
+    //         $customer = $this->customers_model->find($customer_id);
+
+    //         $this->webhooks_client->trigger(WEBHOOK_CUSTOMER_SAVE, $customer);
+
+    //         json_response([
+    //             'success' => true,
+    //             'id' => $customer_id,
+    //         ]);
+    //     } catch (Throwable $e) {
+    //         json_exception($e);
+    //     }
+    // }
+
+
     public function store(): void
-    {
-        try {
-            method('post');
+{
+    try {
+        method('post');
 
-            if (cannot('add', PRIV_CUSTOMERS)) {
-                abort(403, 'Forbidden');
-            }
-
-            if (session('role_slug') !== DB_SLUG_ADMIN && setting('limit_customer_visibility')) {
-                abort(403);
-            }
-
-            check('customer', 'array');
-
-            $customer = request('customer');
-
-            $this->customers_model->only($customer, $this->allowed_customer_fields);
-
-            $this->customers_model->optional($customer, $this->optional_customer_fields);
-
-            $customer_id = $this->customers_model->save($customer);
-
-            $customer = $this->customers_model->find($customer_id);
-
-            $this->webhooks_client->trigger(WEBHOOK_CUSTOMER_SAVE, $customer);
-
-            json_response([
-                'success' => true,
-                'id' => $customer_id,
-            ]);
-        } catch (Throwable $e) {
-            json_exception($e);
+        if (cannot('add', PRIV_CUSTOMERS)) {
+            abort(403, 'Forbidden');
         }
+
+        if (session('role_slug') !== DB_SLUG_ADMIN && setting('limit_customer_visibility')) {
+            abort(403);
+        }
+
+        check('customer', 'array');
+
+        $customer = request('customer');
+
+        $this->customers_model->only($customer, $this->allowed_customer_fields);
+        $this->customers_model->optional($customer, $this->optional_customer_fields);
+
+        $customer_id = $this->customers_model->save($customer);
+
+        $customer = $this->customers_model->find($customer_id);
+
+        $this->webhooks_client->trigger(WEBHOOK_CUSTOMER_SAVE, $customer);
+
+        if ($this->input->is_ajax_request()) {
+            $this->session->set_flashdata('success', 'Customer added successfully.');
+            echo json_encode(['success' => true, 'id' => $customer_id]);
+            return;
+        }
+
+        $this->session->set_flashdata('success', 'Customer added successfully.');
+        redirect('customers');
+    } catch (Throwable $e) {
+        if ($this->input->is_ajax_request()) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            return;
+        }
+        json_exception($e);
     }
+}
 
-    /**
-     * Update a customer.
-     */
-    public function update(): void
+
+
+    public function update($customer_id = null): void
     {
-        try {
-            method('post');
+        $post_customer_id = $this->input->post('customer_id');
+        $appointment_id   = $this->input->post('appointment_id');
 
-            if (cannot('edit', PRIV_CUSTOMERS)) {
-                abort(403, 'Forbidden');
+        $patient_name     = $this->input->post('first-name');
+        $contact_name     = $this->input->post('last-name');
+        $phone_number     = $this->input->post('phone-number');
+
+        $customer_data = [
+            'first_name'   => $patient_name,
+            'last_name'    => $contact_name,
+            'phone_number' => $phone_number
+        ];
+
+        $target_customer_id = !empty($post_customer_id) ? $post_customer_id : $customer_id;
+
+
+        $customer_data['id'] = $target_customer_id;
+        $this->customers_model->save($customer_data);
+
+        if (!empty($appointment_id)) {
+            $provider_id      = $this->input->post('provider_id');
+            $start_date       = $this->input->post('start_date');
+            $time_slot_input  = $this->input->post('start_time');
+            $status           = $this->input->post('status');
+            $appointment_type = $this->input->post('appointment_type');
+
+            if (!empty($start_date) && !empty($time_slot_input)) {
+
+               
+                if (strpos($time_slot_input, '-') !== false) {
+                    $times = explode('-', $time_slot_input);
+                    $start_time_val = trim($times[0]); 
+                    $end_time_val   = trim($times[1]);
+
+                    $start_datetime = $start_date . ' ' . $start_time_val . ':00';
+                    $end_datetime   = $start_date . ' ' . $end_time_val . ':00';
+                } else {
+                   
+                    $start_time_val = trim($time_slot_input);
+                    $start_datetime = $start_date . ' ' . $start_time_val . ':00';
+                    $end_datetime   = date('Y-m-d H:i:s', strtotime($start_datetime . ' +30 minutes'));
+                }
+
+                $existing_appointment = $this->appointments_model->find($appointment_id);
+
+                
+                $appointment_data = array_merge($existing_appointment, [
+                    'id'                => $appointment_id,
+                    'id_users_provider' => $provider_id,
+                    'start_datetime'    => $start_datetime,
+                    'end_datetime'      => $end_datetime,
+                    'status'            => $status,
+                    'appointment_type'  => $appointment_type,
+                    'is_unavailability' => 0
+                ]);
+
+                $this->appointments_model->save($appointment_data);
             }
-
-            $user_id = session('user_id');
-
-            check('customer', 'array');
-
-            $customer = request('customer');
-
-            if (!$this->permissions->has_customer_access($user_id, $customer['id'])) {
-                abort(403, 'Forbidden');
-            }
-
-            $this->customers_model->only($customer, $this->allowed_customer_fields);
-
-            $this->customers_model->optional($customer, $this->optional_customer_fields);
-
-            $customer_id = $this->customers_model->save($customer);
-
-            $customer = $this->customers_model->find($customer_id);
-
-            $this->webhooks_client->trigger(WEBHOOK_CUSTOMER_SAVE, $customer);
-
-            json_response([
-                'success' => true,
-                'id' => $customer_id,
-            ]);
-        } catch (Throwable $e) {
-            json_exception($e);
         }
+        if ($this->input->is_ajax_request()) {
+            $this->session->set_flashdata('success', 'Details updated successfully.');
+            echo json_encode(['success' => true]);
+            return;
+        }
+
+        $this->session->set_flashdata('success', 'Details updated successfully.');
+        redirect('customers');
     }
 
     /**
