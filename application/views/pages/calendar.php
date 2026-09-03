@@ -1591,18 +1591,39 @@
             6: '#0d9488'
         };
 
+        // function getCalendarDateRange() {
+        //     // Selected date ka poora mahina (Month start se Month end tak)
+        //     const startDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+        //     startDate.setHours(0, 0, 0, 0);
+
+        //     const endDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0);
+        //     endDate.setHours(23, 59, 59, 999);
+
+        //     return {
+        //         startDate,
+        //         endDate
+        //     };
+        // }
+        
         function getCalendarDateRange() {
-            // Selected date ka poora mahina (Month start se Month end tak)
-            const startDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
-            startDate.setHours(0, 0, 0, 0);
+            if (currentView === 'week') {
+                const weekDays = getWeekDays(selectedDate);
+                const startDate = new Date(weekDays[0].dateObj);
+                startDate.setHours(0, 0, 0, 0);
 
-            const endDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0);
-            endDate.setHours(23, 59, 59, 999);
+                const endDate = new Date(weekDays[6].dateObj);
+                endDate.setHours(23, 59, 59, 999);
 
-            return {
-                startDate,
-                endDate
-            };
+                return { startDate, endDate };
+            } else {
+                const startDate = new Date(selectedDate);
+                startDate.setHours(0, 0, 0, 0);
+
+                const endDate = new Date(selectedDate);
+                endDate.setHours(23, 59, 59, 999);
+
+                return { startDate, endDate };
+            }
         }
 
         window.loadCalendarData = function() {
