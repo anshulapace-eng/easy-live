@@ -331,37 +331,49 @@
 
     /* Main Grid Section */
     .diary-grid-container {
-        flex: 1;
-        overflow: auto;
-        background: #ffffff;
-    }
+    flex: 1;
+    overflow: auto;
+    background: #ffffff;
+    position: relative; /* Scrollbar ko sticky/fixed position support dene ke liye */
+}
+
+
 
     .diary-table {
-        width: 100%;
-        min-width: 800px;
+        width: max-content;
         border-collapse: separate;
         border-spacing: 0;
-        table-layout: fixed;
+        table-layout: fixed; /* Yeh cells ko stretch hone se rokega */
     }
 
     .diary-table th {
         background: #ffffff;
         border-bottom: 1px solid #e2e8f0;
         border-right: 1px solid #f1f5f9;
-        padding: 4px 8px;
+        padding: 4px 8px !important;
         text-align: center;
         position: sticky;
         top: 0;
         z-index: 10;
-        box-shadow: 0 1px 0 #e2e8f0;
+        width: 130px !important; /* Min-width ki jagah fixed width dein */
+        min-width: 130px !important;
+        max-width: 130px !important;
+        height: 42px !important;
+        vertical-align: middle !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
-    .diary-table th:first-child {
+.diary-table th:first-child {
         position: sticky;
         left: 0;
         z-index: 12;
         background: #ffffff;
         border-right: 1px solid #e2e8f0;
+        width: 80px !important;
+        min-width: 80px !important;
+        max-width: 80px !important;
     }
 
     .diary-table th {
@@ -386,17 +398,25 @@
         text-transform: none;
     }
 
-    .diary-table td {
+   .diary-table td {
         border-bottom: 1px solid #f1f5f9;
         border-right: 1px solid #f1f5f9;
         padding: 2px 4px;
         height: 28px;
         vertical-align: middle;
         font-size: 11px;
+        width: 130px !important;
+        min-width: 130px !important;
+        max-width: 130px !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .time-cell {
-        width: 75px;
+        width: 80px !important;
+        min-width: 80px !important;
+        max-width: 80px !important;
         text-align: right;
         padding-right: 8px !important;
         font-weight: 700;
@@ -408,6 +428,25 @@
         z-index: 5;
         border-right: 1px solid #e2e8f0 !important;
     }
+    
+    .diary-grid-container::-webkit-scrollbar {
+    height: 12px !important; /* Yahan aap height apne hisaab se kam ya zyada kar sakte hain (e.g., 10px ya 14px) */
+}
+
+/* Scrollbar track ka background */
+.diary-grid-container::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+/* Scrollbar handle (thumb) ka design */
+.diary-grid-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 6px;
+}
+
+.diary-grid-container::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
 
     .slot-cell {
         cursor: pointer;
@@ -422,12 +461,14 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 4px 8px;
+        padding: 4px 6px;
         border-radius: 4px;
-        font-size: 11.5px;
+        font-size: 11px;
         margin: 1px 0;
         width: 100%;
+        max-width: 120px; /* Card ki width ko cell ke andar fit rakhega */
         box-sizing: border-box;
+        overflow: hidden;
     }
 
     .apt-confirmed {
@@ -453,11 +494,12 @@
         white-space: nowrap;
     }
 
-    .apt-name {
+   .apt-name {
         font-weight: 700;
         color: #000000;
         overflow: hidden;
         text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .apt-right-icons {
@@ -663,6 +705,34 @@
             padding: 8px 12px;
         }
     }
+    
+     /* --- DAY VIEW SPECIFIC OVERRIDES --- */
+.diary-table.day-view-active {
+    width: 100%;
+    table-layout: auto;
+}
+
+.diary-table.day-view-active th:not(.time-cell):not(:first-child),
+.diary-table.day-view-active td:not(.time-cell):not(:first-child) {
+    width: auto !important;
+    min-width: auto !important;
+    max-width: none !important;
+    text-align: center !important;
+    vertical-align: middle !important; /* Vertically center */
+}
+
+/* Center and stretch the appointment cards in Day view */
+.diary-table.day-view-active .apt-card {
+    margin: 4px auto; /* Horizontally center */
+    max-width: 90%; /* Stretches the card nicely instead of locking to 120px */
+}
+
+.diary-table.day-view-active .blocked-slot,
+.diary-table.day-view-active .break-slot {
+    display: table-cell;
+    vertical-align: middle !important;
+}
+
 
     .modal-header,
     #message-modal .modal-header,
@@ -745,6 +815,89 @@
     opacity: 0.6;
     pointer-events: none;
 }
+
+@media (max-width: 768px) {
+    .diary-body {
+        flex-direction: column;
+    }
+
+    .diary-sidebar {
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 8px 12px;
+        order: -1;
+        background: #ffffff;
+    }
+
+    .sidebar-controls-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        gap: 6px;
+        flex-wrap: nowrap; /* Sabhi ko ek hi line me rakhne ke liye */
+    }
+
+    /* View toggle aur Scroll buttons ko ek line me fit karne ke liye */
+    .sidebar-controls-wrapper > div:first-child {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex: 1;
+        overflow-x: auto;
+    }
+
+    .view-toggle-group {
+        width: auto !important;
+        flex-shrink: 0;
+        margin-bottom: 0 !important;
+    }
+
+    /* Prev aur Next buttons ka size compact karne ke liye taaki line me fit ho jayein */
+    .sidebar-controls-wrapper #scroll-left-btn,
+    .sidebar-controls-wrapper #scroll-right-btn {
+        flex-shrink: 0;
+        padding: 6px 10px !important;
+        font-size: 12px !important;
+        width: auto;
+    }
+
+    .sidebar-section-title {
+        display: none;
+    }
+
+    .mobile-mini-cal-btn {
+        display: flex;
+        flex-shrink: 0;
+        padding: 6px 10px;
+    }
+
+    .mobile-mini-cal-btn.active-btn {
+        background: #0052cc;
+        color: white;
+        border-color: #0052cc;
+    }
+
+    .mini-cal-wrapper {
+        display: none;
+        width: 100%;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .mini-cal-wrapper.mobile-visible {
+        display: block;
+        animation: fadeIn 0.2s ease-in-out;
+    }
+
+    .settings-btn, .sidebar-promo-card {
+        display: none;
+    }
+    
+   
 </style>
 
 <div id="toast-message" class="custom-toast">
@@ -865,6 +1018,16 @@
                     <div class="view-toggle-group">
                         <button class="view-toggle-btn active" id="view-week"><i class="fa-regular fa-calendar-days"></i> Week</button>
                         <button class="view-toggle-btn" id="view-day"><i class="fa-regular fa-calendar"></i> Day</button>
+                    </div>
+                    
+                    <!-- Left / Right Quick Scroll Buttons -->
+                    <div style="display: flex; gap: 6px; margin-bottom: 4px;">
+                        <button type="button" class="nav-btn" id="scroll-left-btn" style="flex: 1; padding: 6px 4px; font-size: 11.5px; justify-content: center;" title="Scroll Left">
+                            <i class="fa-solid fa-chevron-left"></i> Prev
+                        </button>
+                        <button type="button" class="nav-btn" id="scroll-right-btn" style="flex: 1; padding: 6px 4px; font-size: 11.5px; justify-content: center;" title="Scroll Right">
+                            Next <i class="fa-solid fa-chevron-right"></i>
+                        </button>
                     </div>
                 </div>
 
@@ -1202,6 +1365,18 @@
     function hideToast() {
         $('#toast-message').fadeOut(200);
     }
+    
+    $(document).on('click', '#scroll-left-btn', function() {
+    $('.diary-grid-container').animate({
+        scrollLeft: '-=500px'
+    }, 250);
+});
+
+$(document).on('click', '#scroll-right-btn', function() {
+    $('.diary-grid-container').animate({
+        scrollLeft: '+=500px'
+    }, 250);
+});
 
     $(document).ready(function() {
 
@@ -1611,7 +1786,8 @@
                 const startDate = new Date(weekDays[0].dateObj);
                 startDate.setHours(0, 0, 0, 0);
 
-                const endDate = new Date(weekDays[6].dateObj);
+                // const endDate = new Date(weekDays[6].dateObj);
+                const endDate = new Date(weekDays[weekDays.length - 1].dateObj);
                 endDate.setHours(23, 59, 59, 999);
 
                 return { startDate, endDate };
@@ -1648,21 +1824,21 @@
         }
 
         function getWeekDays(startDate) {
-            const monday = new Date(startDate);
-            let weekDays = [];
-            for (let i = 0; i < 7; i++) {
-                let day = new Date(monday);
-                day.setDate(monday.getDate() + i);
-                weekDays.push({
-                    dateObj: day,
-                    dayKey: dayKeysMap[day.getDay()],
-                    dayIndex: day.getDay(),
-                    name: dayNamesShort[day.getDay()],
-                    dateStr: `${shortMonthNames[day.getMonth()]} ${day.getDate()}`
-                });
-            }
-            return weekDays;
-        }
+    const monday = new Date(startDate);
+    let weekDays = [];
+    for (let i = 0; i < 365; i++) { // Yahan 7 ki jagah 365 kar dein
+        let day = new Date(monday);
+        day.setDate(monday.getDate() + i);
+        weekDays.push({
+            dateObj: day,
+            dayKey: dayKeysMap[day.getDay()],
+            dayIndex: day.getDay(),
+            name: dayNamesShort[day.getDay()],
+            dateStr: `${shortMonthNames[day.getMonth()]} ${day.getDate()}`
+        });
+    }
+    return weekDays;
+}
 
         function generateSlotsWithBreaks(dayKey) {
             let slotList = [];
@@ -2033,12 +2209,15 @@
         window.renderCalendar = function() {
             const thead = $('#diary-thead').empty();
             const tbody = $('#appointment-tbody').empty();
+            const diaryTable = $('.diary-table');
             renderMiniCalendar();
 
             if (currentView === 'week') {
+                diaryTable.removeClass('day-view-active');
                 const weekDays = getWeekDays(selectedDate);
                 const startDay = weekDays[0].dateObj;
-                const endDay = weekDays[6].dateObj;
+                // const endDay = weekDays[6].dateObj;
+                const endDay = weekDays[weekDays.length - 1].dateObj;
 
                 $('#date-range-display').text(`${monthNames[startDay.getMonth()]} ${startDay.getDate()} – ${monthNames[endDay.getMonth()]} ${endDay.getDate()}, ${endDay.getFullYear()}`);
 
@@ -2132,6 +2311,7 @@
                 });
 
             } else if (currentView === 'day') {
+                diaryTable.addClass('day-view-active');
                 const dayKey = dayKeysMap[selectedDate.getDay()];
                 const dateAttr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
                 $('#date-range-display').text(`${monthNames[selectedDate.getMonth()]} ${selectedDate.getDate()}, ${selectedDate.getFullYear()}`);
