@@ -76,12 +76,14 @@
                     <a class="dropdown-item" href="<?= site_url('providers') ?>">
                         <?= lang('providers') ?>
                     </a>
-                    <a class="dropdown-item" href="<?= site_url('secretaries') ?>">
-                        <?= lang('secretaries') ?>
-                    </a>
-                    <a class="dropdown-item" href="<?= site_url('admins') ?>">
-                        <?= lang('admins') ?>
-                    </a>
+                    <?php if (isset($_SESSION['role_slug']) && $_SESSION['role_slug'] === 'admin'): ?>
+                        <a class="dropdown-item" href="<?= site_url('secretaries') ?>">
+                            <?= lang('secretaries') ?>
+                        </a>
+                        <a class="dropdown-item" href="<?= site_url('admins') ?>">
+                            <?= lang('admins') ?>
+                        </a>
+                    <?php endif; ?>
                 </div>
             </li>
 

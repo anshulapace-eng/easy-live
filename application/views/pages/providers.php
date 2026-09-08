@@ -2,26 +2,33 @@
 
 <?php section('content'); ?>
 
-<style>
+<!-- PHP Logic to check if user is Secretary/Staff -->
+<?php 
+    $is_secretary = (vars('role_slug') === 'secretary'); 
+?>
 
-    .appointment-row a{
+<!-- FontAwesome & Google Fonts for Exact UI Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+    .appointment-row a {
         color: #0052cc !important;
     }
 
-    #save-provider, #cancel-provider, #delete-provider,#add-provider {
+    #save-provider, #cancel-provider, #delete-provider, #add-provider {
         background: #0052cc !important;
         border-color: #0052cc !important;
         color: #ffffff !important;
     }
 
-
     .form-check-input:checked {
-    background-color: #0052cc;
-    border-color: #0052cc;
-    color: #ffffff;
+        background-color: #0052cc;
+        border-color: #0052cc;
+        color: #ffffff;
     }  
     
-    #reset-working-plan,.add-break,.add-working-plan-exception {
+    #reset-working-plan, .add-break, .add-working-plan-exception {
         background: #0052cc !important;
         border-color: #0052cc !important;
         color: #ffffff !important;
@@ -31,25 +38,24 @@
         background-color: #0052cc !important;
         color: #ffffff !important;
     }
-
-  
-
 </style>
 
 <div class="container backend-page py-3" id="providers-page">
     <div class="row" id="providers">
         <div id="filter-providers" class="filter-records column col-12 mb-4">
+            
+            <!-- Hide Add Provider Button for Secretary -->
+            <?php if (!$is_secretary): ?>
             <button id="add-provider" class="btn btn-primary add-record-btn mb-4">
                 <i class="fas fa-plus-square me-2"></i>
                 <?= lang('add') ?>
             </button>
+            <?php endif; ?>
 
             <form class="mb-4">
                 <div class="input-group">
                     <input type="text" class="key form-control" aria-label="keyword">
-
-                    <button class="filter btn btn-outline-secondary" type="submit"
-                            data-tippy-content="<?= lang('filter') ?>">
+                    <button class="filter btn btn-outline-secondary" type="submit" data-tippy-content="<?= lang('filter') ?>">
                         <i class="fas fa-search"></i>
                     </button>
                 </div>
@@ -81,36 +87,39 @@
                     <button id="cancel-provider" class="btn btn-outline-secondary">
                         <?= lang('cancel') ?>
                     </button>
+                    
+                    <!-- Hide Delete Button for Secretary -->
+                    <?php if (!$is_secretary): ?>
                     <button id="delete-provider" class="btn btn-outline-danger ms-2">
                         <i class="fas fa-trash-alt me-2"></i>
                         <?= lang('delete') ?>
                     </button>
+                    <?php endif; ?>
                 </div>
-
             </div>
 
             <ul class="nav nav-pills switch-view">
-                <li class="nav-item" >
-                    <a class="nav-link active" href="#details" data-bs-toggle="tab">
+                <!-- Hide Details Tab for Secretary -->
+                <li class="nav-item" style="<?= $is_secretary ? 'display:none;' : '' ?>">
+                    <a class="nav-link <?= !$is_secretary ? 'active' : '' ?>" href="#details" data-bs-toggle="tab">
                         <?= lang('details') ?>
                     </a>
                 </li>
+                
+                <!-- Make Working Plan Tab Default for Secretary -->
                 <li class="nav-item">
-                    <a class="nav-link" href="#working-plan" data-bs-toggle="tab">
+                    <a class="nav-link <?= $is_secretary ? 'active' : '' ?>" href="#working-plan" data-bs-toggle="tab">
                         <?= lang('working_plan') ?>
                     </a>
                 </li>
             </ul>
 
-            <?php
-// This form message is outside the details view, so that it can be
-// visible when the user has working plan view active.
-?>
-
             <div class="form-message alert mt-4" style="display:none;"></div>
 
             <div class="tab-content">
-                <div class="details-view tab-pane fade show active clearfix" id="details">
+                
+                <!-- Details View Pane (Hidden for Secretary) -->
+                <div class="details-view tab-pane fade <?= !$is_secretary ? 'show active' : '' ?> clearfix" id="details" style="<?= $is_secretary ? 'display:none;' : '' ?>">
                     <h4 class="mb-3 fw-light">
                         <?= lang('details') ?>
                     </h4>
@@ -153,7 +162,6 @@
                             <div class="mb-3">
                                 <label class="form-label" for="mobile-number">
                                     <?= lang('mobile_number') ?>
-
                                 </label>
                                 <input id="mobile-number" class="form-control" maxlength="128" disabled>
                             </div>
@@ -168,7 +176,6 @@
                             <div class="mb-3">
                                 <label class="form-label" for="city">
                                     <?= lang('city') ?>
-
                                 </label>
                                 <input id="city" class="form-control" maxlength="256" disabled>
                             </div>
@@ -183,7 +190,6 @@
                             <div class="mb-3">
                                 <label class="form-label" for="zip-code">
                                     <?= lang('zip_code') ?>
-
                                 </label>
                                 <input id="zip-code" class="form-control" maxlength="64" disabled>
                             </div>
@@ -194,8 +200,8 @@
                                 </label>
                                 <textarea id="notes" class="form-control" rows="3" disabled></textarea>
                             </div>
-
                         </div>
+
                         <div class="settings col-12 col-lg-6">
                             <div class="mb-3">
                                 <label class="form-label" for="username">
@@ -314,68 +320,73 @@
                             <div id="provider-services" class="card card-body border">
                                 <!-- JS -->
                             </div>
-
                         </div>
                     </div>
                 </div>
 
-                <div class="working-plan-view tab-pane fade clearfix" id="working-plan">
-                    <h4 class="mb-3 fw-light">
-                        <?= lang('working_plan') ?>
-                    </h4>
+                <!-- Working Plan Tab Pane -->
+                <div class="working-plan-view tab-pane fade <?= $is_secretary ? 'show active' : '' ?> clearfix" id="working-plan">
+                    
+                    <!-- Hide Regular Working Plan and Breaks for Secretary -->
+                    <div style="<?= $is_secretary ? 'display:none;' : '' ?>">
+                        <h4 class="mb-3 fw-light">
+                            <?= lang('working_plan') ?>
+                        </h4>
 
-                    <button id="reset-working-plan" class="btn btn-primary"
-                            data-tippy-content="<?= lang('reset_working_plan') ?>">
-                        <i class="fas fa-undo-alt me-2"></i>
-                        <?= lang('reset_plan') ?></button>
-                    <div class="table-responsive">
-                        <table class="working-plan table table-striped mt-2">
-                            <thead>
-                            <tr>
-                                <th><?= lang('day') ?></th>
-                                <th><?= lang('start') ?></th>
-                                <th><?= lang('end') ?></th>
-                            </tr>
-                            </thead>
-                            <tbody><!-- Dynamic Content --></tbody>
-                        </table>
-                    </div>
+                        <button id="reset-working-plan" class="btn btn-primary"
+                                data-tippy-content="<?= lang('reset_working_plan') ?>">
+                            <i class="fas fa-undo-alt me-2"></i>
+                            <?= lang('reset_plan') ?></button>
+                        <div class="table-responsive">
+                            <table class="working-plan table table-striped mt-2">
+                                <thead>
+                                <tr>
+                                    <th><?= lang('day') ?></th>
+                                    <th><?= lang('start') ?></th>
+                                    <th><?= lang('end') ?></th>
+                                </tr>
+                                </thead>
+                                <tbody><!-- Dynamic Content --></tbody>
+                            </table>
+                        </div>
 
-                    <br>
+                        <br>
 
-                    <h4 class="mb-3 fw-light">
-                        <?= lang('breaks') ?>
-                    </h4>
+                        <h4 class="mb-3 fw-light">
+                            <?= lang('breaks') ?>
+                        </h4>
 
-                    <p>
-                        <?= lang('add_breaks_during_each_day') ?>
-                    </p>
+                        <p>
+                            <?= lang('add_breaks_during_each_day') ?>
+                        </p>
 
-                    <div>
-                        <button type="button" class="add-break btn btn-primary">
-                            <i class="fas fa-plus-square me-2"></i>
-                            <?= lang('add_break') ?>
-                        </button>
-                    </div>
+                        <div>
+                            <button type="button" class="add-break btn btn-primary">
+                                <i class="fas fa-plus-square me-2"></i>
+                                <?= lang('add_break') ?>
+                            </button>
+                        </div>
 
-                    <br>
+                        <br>
 
-                    <div class="table-responsive">
-                        <table class="breaks table table-striped">
-                            <thead>
-                            <tr>
-                                <th><?= lang('day') ?></th>
-                                <th><?= lang('start') ?></th>
-                                <th><?= lang('end') ?></th>
-                                <th><?= lang('actions') ?></th>
-                            </tr>
-                            </thead>
-                            <tbody><!-- Dynamic Content --></tbody>
-                        </table>
-                    </div>
+                        <div class="table-responsive">
+                            <table class="breaks table table-striped">
+                                <thead>
+                                <tr>
+                                    <th><?= lang('day') ?></th>
+                                    <th><?= lang('start') ?></th>
+                                    <th><?= lang('end') ?></th>
+                                    <th><?= lang('actions') ?></th>
+                                </tr>
+                                </thead>
+                                <tbody><!-- Dynamic Content --></tbody>
+                            </table>
+                        </div>
 
-                    <br>
+                        <br>
+                    </div> <!-- End of Hidden Regular Section -->
 
+                    <!-- Exceptions Section (Visible to Everyone, including Secretary) -->
                     <h4 class="mb-3 fw-light">
                         <?= lang('working_plan_exceptions') ?>
                     </h4>
@@ -427,6 +438,3 @@
 <script src="<?= asset_url('assets/js/pages/providers.js') ?>"></script>
 
 <?php end_section('scripts'); ?>
-
-
-

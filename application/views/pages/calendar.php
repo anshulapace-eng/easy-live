@@ -1743,6 +1743,7 @@ $(document).on('click', '#scroll-right-btn', function() {
         let appointmentsData = [];
         let unavailabilitiesData = [];
         let blockedPeriodsData = [];
+        let workingPlanExceptions = [];
 
         let workingPlan = {};
         try {
@@ -1811,6 +1812,7 @@ $(document).on('click', '#scroll-right-btn', function() {
                 appointmentsData = response.appointments || [];
                 unavailabilitiesData = response.unavailabilities || [];
                 blockedPeriodsData = response.blocked_periods || [];
+                workingPlanExceptions = response.working_plan_exceptions || [];
             });
         }
 
@@ -1840,9 +1842,67 @@ $(document).on('click', '#scroll-right-btn', function() {
     return weekDays;
 }
 
-        function generateSlotsWithBreaks(dayKey) {
+        // function generateSlotsWithBreaks(dayKey) {
+        //     let slotList = [];
+        //     let dayPlan = workingPlan[dayKey];
+        //     if (!dayPlan) return slotList;
+
+        //     let [startHour, startMin] = dayPlan.start.split(':').map(Number);
+        //     let [endHour, endMin] = dayPlan.end.split(':').map(Number);
+
+        //     let currentMinutes = startHour * 60 + startMin;
+        //     let endMinutes = endHour * 60 + endMin;
+        //     let breaks = dayPlan.breaks || [];
+
+        //     while (currentMinutes < endMinutes) {
+        //         let h = Math.floor(currentMinutes / 60);
+        //         let m = currentMinutes % 60;
+
+        //         let isBreak = breaks.some(b => {
+        //             let [bStartH, bStartM] = b.start.split(':').map(Number);
+        //             let [bEndH, bEndM] = b.end.split(':').map(Number);
+        //             return currentMinutes >= (bStartH * 60 + bStartM) && currentMinutes < (bEndH * 60 + bEndM);
+        //         });
+
+        //         let period = h >= 12 ? 'PM' : 'AM';
+        //         let displayHour = h % 12 || 12;
+        //         let displayMin = String(m).padStart(2, '0');
+        //         let timeStr = `${displayHour}:${displayMin} ${period}`;
+
+        //         slotList.push({
+        //             time: timeStr,
+        //             isBreak: isBreak
+        //         });
+
+        //         currentMinutes += 15;
+        //     }
+        //     return slotList;
+        // }
+        
+        function generateSlotsWithBreaks(dateStr,dayKey) {
             let slotList = [];
-            let dayPlan = workingPlan[dayKey];
+            
+            let dayPlan = null;
+            let exception = workingPlanExceptions.find(ex => {
+                return dateStr >= ex.start_date && dateStr <= ex.end_date;
+            });
+
+            if (exception) {
+                // अगर exception मिला और start/end टाइम नहीं है, तो ऑफिस बंद है
+                if (!exception.start_time || !exception.end_time) {
+                    return slotList; 
+                }
+                dayPlan = {
+                    start: exception.start_time,
+                    end: exception.end_time,
+                    breaks: exception.breaks ? JSON.parse(exception.breaks) : []
+                };
+            } else {
+                // अगर exception नहीं है तो डिफ़ॉल्ट वीकली प्लान इस्तेमाल करें
+                dayPlan = workingPlan[dayKey];
+            }
+            
+            // let dayPlan = workingPlan[dayKey];
             if (!dayPlan) return slotList;
 
             let [startHour, startMin] = dayPlan.start.split(':').map(Number);
@@ -2235,7 +2295,10 @@ $(document).on('click', '#scroll-right-btn', function() {
 
                 let allSlotsMap = new Map();
                 weekDays.forEach(d => {
-                    generateSlotsWithBreaks(d.dayKey).forEach(slotObj => {
+                    
+                    const dateAttr = `${d.dateObj.getFullYear()}-${String(d.dateObj.getMonth() + 1).padStart(2, '0')}-${String(d.dateObj.getDate()).padStart(2, '0')}`;
+                    
+                    generateSlotsWithBreaks(dateAttr,d.dayKey).forEach(slotObj => {
                         allSlotsMap.set(slotObj.time, true);
                     });
                 });
@@ -2247,7 +2310,24 @@ $(document).on('click', '#scroll-right-btn', function() {
                     weekDays.forEach((d) => {
                         const dateAttr = `${d.dateObj.getFullYear()}-${String(d.dateObj.getMonth() + 1).padStart(2, '0')}-${String(d.dateObj.getDate()).padStart(2, '0')}`;
 
-                        if (!workingPlan[d.dayKey]) {
+                        // if (!workingPlan[d.dayKey]) {
+                        //     if (index === 0) {
+                        //         row += `<td rowspan="${uniqueTimeSlots.length}" class="holiday-col" style="background: #FAF9FF; text-align: center; border-right: 1px solid #e2e8f0;">
+                        //             <div class="holiday-content" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+                        //                 <div style="margin-bottom: 8px; filter: drop-shadow(0px 4px 6px rgba(157, 123, 255, 0.35));">
+                        //                     <i class="fa-solid fa-calendar-xmark" style="font-size: 36px; color: #9D7BFF;"></i>
+                        //                 </div>
+                        //                 <div style="font-weight: 700; font-size: 15px; color: #1E1B4B; margin-bottom: 2px; letter-spacing: -0.3px;">Holiday</div>
+                        //                 <div style="font-size: 12.5px; font-weight: 600; color: #9D7BFF;">(Office Closed)</div>
+                        //             </div>
+                        //         </td>`;
+                        //     }
+                        //     return;
+                        // }
+
+                        let daySlots = generateSlotsWithBreaks(dateAttr, d.dayKey);
+                        
+                        if (daySlots.length === 0) {
                             if (index === 0) {
                                 row += `<td rowspan="${uniqueTimeSlots.length}" class="holiday-col" style="background: #FAF9FF; text-align: center; border-right: 1px solid #e2e8f0;">
                                     <div class="holiday-content" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
@@ -2261,8 +2341,7 @@ $(document).on('click', '#scroll-right-btn', function() {
                             }
                             return;
                         }
-
-                        let daySlots = generateSlotsWithBreaks(d.dayKey);
+                        
                         let currentSlot = daySlots.find(s => s.time === time);
 
                         if (!currentSlot) {
@@ -2327,7 +2406,7 @@ $(document).on('click', '#scroll-right-btn', function() {
                     </th>
                 </tr>`);
 
-                let daySlots = generateSlotsWithBreaks(dayKey);
+                let daySlots = generateSlotsWithBreaks(dateAttr, dayKey);
                 if (daySlots.length === 0) {
                     tbody.append(`<tr><td colspan="2" class="holiday-col" style="height: 400px; text-align: center; background: #FAF9FF;">
                         <div class="holiday-content" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">

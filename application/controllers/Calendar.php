@@ -727,6 +727,13 @@ class Calendar extends EA_Controller
                     'end_datetime <=' => $end_date,
                 ]),
             ];
+            
+            // --- Working Plan Exceptions Fetch Karein ---
+            $this->db->select('*');
+            $this->db->from('ea_working_plan_exceptions');
+            $this->db->where('start_date <=', request('end_date'));
+            $this->db->where('end_date >=', request('start_date'));
+            $response['working_plan_exceptions'] = $this->db->get()->result_array();
 
             foreach ($response['appointments'] as &$appointment) {
                 $appointment['provider'] = $this->providers_model->find($appointment['id_users_provider']);
