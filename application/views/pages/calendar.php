@@ -1260,6 +1260,8 @@
                 <!-- Footer Actions -->
                 <div id="modal-action-buttons" style="display: flex; gap: 6px;">
                     <input type="hidden" id="cancelid" name="cancelid" value="">
+                    <input type="hidden" id="modal-start-datetime" value="">
+                    <input type="hidden" id="modal-end-datetime" value="">
 
                     <div class="dropdown" style="flex: 1;">
                         <button class="btn dropdown-toggle w-100" type="button" id="appointmentActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 5px 0; border: 1px solid #cbd5e1; background: #ffffff; color: #334155; border-radius: 6px; font-weight: 700; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
@@ -1298,6 +1300,8 @@
             </div>
             <div class="modal-footer border-0">
                 <input type="hidden" id="delete-appointment-id" value="">
+                <input type="hidden" id="delete-start-datetime" value="">
+                <input type="hidden" id="delete-end-datetime" value="">
                 <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">No</button>
                 <button type="button" class="btn btn-confirm-delete" id="btn-confirm-delete-action">Yes</button>
             </div>
@@ -1497,8 +1501,12 @@ $(document).on('click', '#scroll-right-btn', function() {
 
         $(document).on('click', '#cancelbutton', function() {
             const appointmentId = $('#cancelid').val();
+             const startDatetime = $('#modal-start-datetime').val();
+    const endDatetime = $('#modal-end-datetime').val();
             if (appointmentId) {
                 $('#delete-appointment-id').val(appointmentId);
+                $('#delete-start-datetime').val(startDatetime);
+        $('#delete-end-datetime').val(endDatetime);
                 $('#appointment-details-modal').modal('hide');
                 $('#deleteAppointmentModal').modal('show');
             } else {
@@ -1511,6 +1519,8 @@ $(document).on('click', '#scroll-right-btn', function() {
 
         $("#btn-confirm-delete-action").on("click", function() {
             const appointmentId = $("#delete-appointment-id").val();
+            const startDatetime = $("#delete-start-datetime").val();
+    const endDatetime = $("#delete-end-datetime").val();
             if (!appointmentId) {
                 alert("Appointment ID nahi mili!");
                 return;
@@ -1522,6 +1532,8 @@ $(document).on('click', '#scroll-right-btn', function() {
                 dataType: "json",
                 data: {
                     appointment_id: appointmentId,
+                    start_datetime: startDatetime,
+            end_datetime: endDatetime,
                     cancellation_reason: "noting",
                     notify_users: true,
                     csrf_token: vars('csrf_token')
@@ -1551,6 +1563,8 @@ $(document).on('click', '#scroll-right-btn', function() {
             e.preventDefault();
 
             const appointmentId = $('#cancelid').val();
+            const startDatetime = $('#modal-start-datetime').val();
+           const endDatetime = $('#modal-end-datetime').val();
             const checkType = $(this).data('check-type');
             const successMsg = checkType === 1 ? "Checked in successfully." : "Checked out successfully.";
 
@@ -1565,6 +1579,8 @@ $(document).on('click', '#scroll-right-btn', function() {
                 dataType: "json",
                 data: {
                     appointment_id: appointmentId,
+                    start_datetime: startDatetime,
+                    end_datetime: endDatetime,
                     check_type: checkType,
                     csrf_token: vars('csrf_token')
                 },
@@ -1621,6 +1637,12 @@ $(document).on('click', '#scroll-right-btn', function() {
         if (actionData.action === 'delete_unavailability') {
             if (!confirm("Are you sure you want to make this slot available?")) {
                 return;
+            }
+            if (actionData.start_datetime) {
+                postData.start_datetime = actionData.start_datetime;
+            }
+            if (actionData.end_datetime) {
+                postData.end_datetime = actionData.end_datetime;
             }
             postData.is_unavailability = 0;
             successMsg = "Slot is now available!";
@@ -2047,6 +2069,8 @@ $(document).on('click', '#scroll-right-btn', function() {
             $modal.find('.customer-avatar').text(customerInitials);
             $modal.find('.customer-name').text(customerName);
             $modal.find('#cancelid').val(appointment.id);
+            $modal.find('#modal-start-datetime').val(appointment.start_datetime);
+            $modal.find('#modal-end-datetime').val(appointment.end_datetime);
 
             const customerPhone = appointment.customer?.phone_number || '';
             let cleanPhone = String(customerPhone).replace(/\D/g, '');
@@ -2361,6 +2385,8 @@ $(document).on('click', '#scroll-right-btn', function() {
                         const unavailability = appointment ? null : findUnavailabilityAt(dateAttr, time);
                         const blockedPeriod = appointment || unavailability ? null : findBlockedPeriodAt(dateAttr, time);
                         let blockId = unavailability ? unavailability.id : (blockedPeriod ? blockedPeriod.id : '');
+                        let blockStart = unavailability ? unavailability.start_datetime : (blockedPeriod ? blockedPeriod.start_datetime : '');
+                        let blockEnd = unavailability ? unavailability.end_datetime : (blockedPeriod ? blockedPeriod.end_datetime : '');
                         
                         const [yearVal, monthVal, dayVal] = dateAttr.split('-').map(Number);
                         const slot24Time = formatTimeSlotTo24(time); // Day view me yahan slotObj.time hoga
@@ -2373,7 +2399,7 @@ $(document).on('click', '#scroll-right-btn', function() {
                         
 
                         if (unavailability || blockedPeriod) {
-                            row += `<td class="blocked-slot" data-date="${dateAttr}" data-slot="${time}" onclick="handleAppointmentAction(this, '${blockId}', { action: 'delete_unavailability' })" style="background-color: rgb(190, 190, 190); color: #000; cursor: pointer; text-align: center;">
+                            row += `<td class="blocked-slot" data-date="${dateAttr}" data-slot="${time}" onclick="handleAppointmentAction(this, '${blockId}', { action: 'delete_unavailability',start_datetime: '${blockStart}', end_datetime: '${blockEnd}' })" style="background-color: rgb(190, 190, 190); color: #000; cursor: pointer; text-align: center;">
                                 <i class="fa-solid fa-ban"></i> Unavailable
                             </td>`;
                         } else if (appointment) {
