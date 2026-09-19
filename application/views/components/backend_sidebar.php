@@ -136,8 +136,10 @@
                 </a>
                 <ul class="submenu">
                     <li><a href="<?= site_url('providers') ?>"><i class='bx bx-user-plus'></i> Providers</a></li>
+                   <?php if (isset($_SESSION['role_slug']) && $_SESSION['role_slug'] === 'admin'): ?>
                     <li><a href="<?= site_url('secretaries') ?>"><i class='bx bx-group'></i> Secretaries</a></li>
                     <li><a href="<?= site_url('admins') ?>"><i class='bx bx-shield-alt-2'></i> Admins</a></li>
+                    <?php endif; ?>
                 </ul>
             </li>
 

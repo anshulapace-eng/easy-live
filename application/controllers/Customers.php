@@ -39,6 +39,7 @@ class Customers extends EA_Controller
         'custom_field_4',
         'custom_field_5',
         'ldap_dn',
+        'created_by'
     ];
 
     public array $optional_customer_fields = [
@@ -233,11 +234,20 @@ class Customers extends EA_Controller
         $this->db->join('ea_users as provider', 'provider.id = ea_appointments.id_users_provider', 'left');
         $this->db->join('ea_services', 'ea_services.id = ea_appointments.id_services', 'left');
 
+        $this->db->where('ea_users.id_roles', 3);
         if ($role_slug === DB_SLUG_PROVIDER) {
-            $this->db->where('ea_appointments.id_users_provider', $user_id);
+            $this->db->group_start();
+            $this->db->where('ea_users.created_by', $user_id);
+                $this->db->or_where('ea_appointments.id_users_provider', $user_id);
+                // $this->db->or_where('ea_appointments.id_users_provider IS NULL', null, false);
+            $this->db->group_end();
         } elseif ($role_slug === DB_SLUG_SECRETARY) {
             if (!empty($secretary_providers)) {
-                $this->db->where_in('ea_appointments.id_users_provider', $secretary_providers);
+                $this->db->group_start();
+                $this->db->where_in('ea_users.created_by', $secretary_providers);
+                    $this->db->or_where_in('ea_appointments.id_users_provider', $secretary_providers);
+                    // $this->db->or_where('ea_appointments.id_users_provider IS NULL', null, false);
+                $this->db->group_end();
             } else {
                 $this->db->where('1 = 0', null, false);
             }
@@ -426,7 +436,7 @@ class Customers extends EA_Controller
         check('customer', 'array');
 
         $customer = request('customer');
-
+$customer['created_by'] = session('user_id');
         $this->customers_model->only($customer, $this->allowed_customer_fields);
         $this->customers_model->optional($customer, $this->optional_customer_fields);
 
@@ -452,6 +462,206 @@ class Customers extends EA_Controller
         json_exception($e);
     }
 }
+
+/**
+     * Get the dynamic edit form HTML for a specific customer via AJAX.
+     */
+    public function get_edit_form(): void
+    {
+        try {
+            method('get');
+
+            if (cannot('view', PRIV_CUSTOMERS)) {
+                abort(403, 'Forbidden');
+            }
+
+            $customer_id = $this->input->get('customer_id');
+
+            if (empty($customer_id) || !filter_var($customer_id, FILTER_VALIDATE_INT)) {
+                throw new InvalidArgumentException('Invalid customer ID provided.');
+            }
+
+            // Fetch specific customer with appointment details using the same query logic as index()
+            $this->db->select('
+                ea_users.*, 
+                ea_appointments.id as appointment_id,
+                ea_appointments.start_datetime,
+                ea_appointments.end_datetime,
+                ea_appointments.id_users_provider,
+                ea_appointments.status as appointment_status,
+                ea_appointments.appointment_type,
+                provider.first_name as provider_first_name,
+                provider.last_name as provider_last_name,
+                ea_services.name as service_name
+            ');
+            $this->db->from('ea_users');
+            $this->db->join('ea_appointments', 'ea_appointments.id_users_customer = ea_users.id', 'left');
+            $this->db->join('ea_users as provider', 'provider.id = ea_appointments.id_users_provider', 'left');
+            $this->db->join('ea_services', 'ea_services.id = ea_appointments.id_services', 'left');
+            $this->db->where('ea_users.id', $customer_id);
+            
+            $query = $this->db->get();
+            $data = $query->row_array();
+
+            // echo "<pre>";
+            // print_r($data);
+            // die();
+
+            if (!$data) {
+                echo '<div class="alert alert-danger text-center mb-0">Customer not found.</div>';
+                return;
+            }
+
+            $providers = $this->db->where('id_roles', 2)->get('ea_users')->result_array();
+
+            $all_customers = $this->customers_model->get_batch(); 
+            $customer_options_html = '<option value="">Select customer from list...</option>';
+            if (!empty($all_customers)) {
+                foreach ($all_customers as $cust) {
+                    $fname = html_escape($cust['first_name'] ?? '');
+                    $lname = html_escape($cust['last_name'] ?? '');
+                    $phone = html_escape($cust['phone_number'] ?? 'No Phone');
+                    
+                    $customer_options_html .= '<option style="font-size: 10px;" value="' . $cust['id'] . '" ' .
+                        'data-firstname="' . $fname . '" ' . 
+                        'data-lastname="' . $lname . '" ' . 
+                        'data-phone="' . html_escape($cust['phone_number'] ?? '') . '">' . 
+                        $fname . ' ' . $lname . ' (' . $phone . ')' . 
+                        '</option>';
+                }
+            }
+
+            // Render the partial form body content
+            ?>
+            <!-- Appointment Details Section -->
+            <?php if (!empty($data['appointment_id'])): ?>
+                <div class="bg-white p-3 rounded-3 border mb-3 shadow-sm">
+                    <h6 class="fw-bold text-dark mb-3" style="font-size: 14px;">Appointment Details</h6>
+                    <input type="hidden" value="<?= $data['appointment_id']; ?>" name="appointment_id" id="appointment_id">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                                <label class="form-label form-label-custom">Provider <span class="text-danger">*</span></label>
+                                <select name="provider_id" id="provider_id" class="form-select form-select-custom select2-enable" required>
+                                    <option value="">Select Provider</option>
+                                    <?php if (!empty($providers)): ?>
+                                        <?php foreach ($providers as $prov): ?>
+                                            <?php 
+                                                $prov_id = $prov['id'];
+                                                $prov_name = trim(($prov['first_name'] ?? '') . ' ' . ($prov['last_name'] ?? ''));
+                                                $is_selected = (isset($data['id_users_provider']) && (int)$data['id_users_provider'] === (int)$prov_id) ? 'selected' : '';
+                                            ?>
+                                            <option value="<?= $prov_id; ?>" <?= $is_selected; ?>>
+                                                <?= html_escape($prov_name ?: 'Provider #' . $prov_id); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </select>
+                            </div>
+                        <div class="col-md-4">
+                            <label class="form-label form-label-custom">Select Date <span class="text-danger">*</span></label>
+                            <div class="input-group input-group-custom">
+                                <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
+                                <input type="date" name="start_date" id="start_date" class="form-control appointment-date" value="<?= !empty($data['start_datetime']) ? date('Y-m-d', strtotime($data['start_datetime'])) : ''; ?>" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label form-label-custom">Select Time Slot <span class="text-danger">*</span></label>
+                            <div class="input-group input-group-custom">
+                                <span class="input-group-text"><i class="fa-regular fa-clock"></i></span>
+                                <select name="start_time" id="start_time" class="form-select appointment-time" required>
+                                    <?php
+                                    if (!empty($data['start_datetime'])):
+                                        $start_time_val = date('H:i', strtotime($data['start_datetime']));
+                                        $start_label = date('H:i', strtotime($data['start_datetime']));
+                                        $end_label = !empty($data['end_datetime']) ? date('H:i', strtotime($data['end_datetime'])) : '';
+                                        $display_label = $end_label ? $start_label . ' - ' . $end_label : $start_label;
+                                    ?>
+                                        <option value="<?= $start_time_val; ?>" selected>
+                                            <?= $display_label; ?>
+                                        </option>
+                                    <?php else: ?>
+                                        <option value="">Choose date first...</option>
+                                    <?php endif; ?>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label form-label-custom">Status</label>
+                            <select name="status" id="status" class="form-select form-select-custom">
+                                <option value="Booked" <?= (isset($data['appointment_status']) && $data['appointment_status'] == 'Booked') ? 'selected' : ''; ?>>Booked</option>
+                                <option value="Confirmed" <?= (isset($data['appointment_status']) && $data['appointment_status'] == 'Confirmed') ? 'selected' : ''; ?>>Confirmed</option>
+                                <option value="Rescheduled" <?= (isset($data['appointment_status']) && $data['appointment_status'] == 'Rescheduled') ? 'selected' : ''; ?>>Rescheduled</option>
+                                <option value="Cancelled" <?= (isset($data['appointment_status']) && $data['appointment_status'] == 'Cancelled') ? 'selected' : ''; ?>>Cancelled</option>
+                                <option value="Draft" <?= (isset($data['appointment_status']) && $data['appointment_status'] == 'Draft') ? 'selected' : ''; ?>>Draft</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label form-label-custom">Appointment Types <span class="text-danger">*</span></label>
+                            <select name="appointment_type" id="appointment_type" class="form-select form-select-custom" required>
+                                <option value="in-clinic" <?= (isset($data['appointment_type']) && $data['appointment_type'] == 'in-clinic') ? 'selected' : ''; ?>>In Clinic (Face to face)</option>
+                                <option value="video" <?= (isset($data['appointment_type']) && $data['appointment_type'] == 'video') ? 'selected' : ''; ?>>Video Call</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <!-- Customer Details Section -->
+            <div class="bg-white p-3 rounded-3 border shadow-sm">
+                <input type="hidden" value="<?= $data['id']; ?>" name="customer_id" id="customer_id">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold text-dark mb-0" style="font-size: 14px;">Customer Details</h6>
+                    <div class="btn-group btn-group-sm customer-mode-toggle" role="group">
+                        <button type="button" class="btn btn-outline-secondary active btn-new-mode" data-mode="new">
+                            <i class="fa-solid fa-user-plus me-1"></i> New
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-select-mode" data-mode="select">
+                            <i class="fa-solid fa-hand-pointer me-1"></i> Select
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3 select-search-container d-none">
+                    <div class="col-12">
+                        <label class="form-label form-label-custom text-primary fw-bold">Search & Select Customer</label>
+                        <select class="form-select form-select-custom master-customer-select">
+                            <?= $customer_options_html; ?>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <input type="hidden" class="default-value-holder"
+                            data-fname="<?= html_escape($data['first_name'] ?? ''); ?>"
+                            data-lname="<?= html_escape($data['last_name'] ?? ''); ?>"
+                            data-dphone="<?= html_escape($data['phone_number'] ?? ''); ?>">
+                        <label class="form-label form-label-custom">Patient Name <span class="text-danger">*</span></label>
+                        <input type="text" name="first-name" id="first-name" class="form-control form-control-custom patient-input" value="<?= html_escape(($data['first_name'] ?? '')); ?>" required placeholder="Enter patient name">
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label form-label-custom mb-0">Contact Name</label>
+                            <div class="form-check form-check-inline m-0">
+                                <input class="form-check-input same-as-patient-checkbox" type="checkbox">
+                                <label class="form-check-label text-muted" style="font-size: 11px;">Same as Patient</label>
+                            </div>
+                        </div>
+                        <input type="text" name="last-name" id="last-name" class="form-control form-control-custom contact-input" value="<?= html_escape($data['last_name'] ?? ''); ?>" placeholder="Enter contact name">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label form-label-custom">Phone Number <span class="text-danger">*</span></label>
+                        <input type="text" name="phone-number" id="phone-number" class="form-control form-control-custom phone-input" value="<?= html_escape($data['phone_number'] ?? ''); ?>" required placeholder="Enter phone number">
+                    </div>
+                </div>
+            </div>
+            <?php
+        } catch (Throwable $e) {
+            echo '<div class="alert alert-danger text-center mb-0">Error loading details: ' . $e->getMessage() . '</div>';
+        }
+    }
 
 
 

@@ -253,7 +253,7 @@
                                             <?php endif; ?>
                                         </td>
                                         <td class="pe-3 text-center">
-                                            <button type="button" class="btn btn-sm btn-light border text-primary px-2 py-1" data-bs-toggle="modal" data-bs-target="#customermodal_<?= $row['id']; ?>" title="Edit Customer" style="font-size: 11px; border-radius: 4px;">
+                                            <button type="button" class="btn btn-sm btn-light border text-primary px-2 py-1 edit-customer-btn" data-customer-id="<?= $row['id']; ?>" title="Edit Customer" style="font-size: 11px; border-radius: 4px;">
                                                 <i class="fa-solid fa-pen-to-square"></i>
                                             </button>
                                         </td>
@@ -342,159 +342,53 @@
     }
 </style>
 
+<?php
+// 1. Pehle hi saare customers ka option HTML ek variable me bana lein
+$customer_options_html = '<option value="">Select customer from list...</option>';
+if (!empty($customers)) {
+    foreach ($customers as $cust) {
+        $fname = html_escape($cust['first_name'] ?? '');
+        $lname = html_escape($cust['last_name'] ?? '');
+        $phone = html_escape($cust['phone_number'] ?? 'No Phone');
+        
+        $customer_options_html .= '<option style="font-size: 10px;" value="' . $cust['id'] . '" ' .
+            'data-firstname="' . $fname . '" ' . 
+            'data-lastname="' . $lname . '" ' . 
+            'data-phone="' . html_escape($cust['phone_number'] ?? '') . '">' . 
+            $fname . ' ' . $lname . ' (' . $phone . ')' . 
+            '</option>';
+    }
+}
+?>
+
 <!-- Modals for Editing Customers & Appointments -->
-<?php
-if (!empty($customers)):
-    foreach ($customers as $data):
-?>
-        <div class="modal fade" id="customermodal_<?= $data['id']; ?>" tabindex="-1" aria-labelledby="customermodalLabel_<?= $data['id']; ?>" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content border-0 shadow-lg">
-                    <div class="modal-header border-bottom px-2 py-2">
-                        <h5 class="modal-title fw-bold text-white" id="customermodalLabel_<?= $data['id']; ?>" style="font-size: 16px;">
-                            <i class="fa-solid fa-pen-to-square text-primary me-2"></i> Edit Appointment & Customer Details
-                        </h5>
-                        <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-
-                    <form action="<?= site_url('customers/update') ?>" method="POST" class="customer-update-form">
-                        <div class="modal-body p-4 bg-light">
-
-                            <!-- Appointment Details Section -->
-                            <?php if (!empty($data['appointment_id'])): ?>
-                                <div class="bg-white p-3 rounded-3 border mb-3 shadow-sm">
-                                    <h6 class="fw-bold text-dark mb-3" style="font-size: 14px;">Appointment Details</h6>
-                                    <input type="hidden" value="<?= $data['appointment_id']; ?>" name="appointment_id" id="appointment_id">
-                                    <div class="row g-3">
-                                        <div class="col-md-4">
-                                            <label class="form-label form-label-custom">Provider <span class="text-danger">*</span></label>
-                                            <select name="provider_id" id="provider_id" class="form-select form-select-custom select2-enable" required>
-                                                <option value="">Select Provider</option>
-                                                <option value="<?= $data['id_users_provider']; ?>" <?= (isset($data['id_users_provider']) && $data['id_users_provider'] == 1) ? 'selected' : ''; ?>>Dr. Monashish Sahu</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label form-label-custom">Select Date <span class="text-danger">*</span></label>
-                                            <div class="input-group input-group-custom">
-                                                <span class="input-group-text"><i class="fa-regular fa-calendar"></i></span>
-                                                <input type="date" name="start_date" id="start_date" class="form-control appointment-date" value="<?= !empty($data['start_datetime']) ? date('Y-m-d', strtotime($data['start_datetime'])) : ''; ?>" required>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label form-label-custom">Select Time Slot <span class="text-danger">*</span></label>
-                                            <div class="input-group input-group-custom">
-                                                <span class="input-group-text"><i class="fa-regular fa-clock"></i></span>
-                                                <select name="start_time" id="start_time" class="form-select appointment-time" required>
-                                                    <?php
-                                                    if (!empty($data['start_datetime'])):
-                                                        $start_time_val = date('H:i', strtotime($data['start_datetime']));
-                                                        $start_label = date('H:i', strtotime($data['start_datetime']));
-                                                        $end_label = !empty($data['end_datetime']) ? date('H:i', strtotime($data['end_datetime'])) : '';
-                                                        $display_label = $end_label ? $start_label . ' - ' . $end_label : $start_label;
-                                                    ?>
-                                                        <option value="<?= $start_time_val; ?>" selected>
-                                                            <?= $display_label; ?>
-                                                        </option>
-                                                    <?php else: ?>
-                                                        <option value="">Choose date first...</option>
-                                                    <?php endif; ?>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-4">
-                                            <label class="form-label form-label-custom">Status</label>
-                                            <select name="status" id="status" class="form-select form-select-custom">
-                                                <option value="Booked" <?= (isset($data['appointment_status']) && $data['appointment_status'] == 'Booked') ? 'selected' : ''; ?>>Booked</option>
-                                                <option value="Confirmed" <?= (isset($data['appointment_status']) && $data['appointment_status'] == 'Confirmed') ? 'selected' : ''; ?>>Confirmed</option>
-                                                <option value="Rescheduled" <?= (isset($data['appointment_status']) && $data['appointment_status'] == 'Rescheduled') ? 'selected' : ''; ?>>Rescheduled</option>
-                                                <option value="Cancelled" <?= (isset($data['appointment_status']) && $data['appointment_status'] == 'Cancelled') ? 'selected' : ''; ?>>Cancelled</option>
-                                                <option value="Draft" <?= (isset($data['appointment_status']) && $data['appointment_status'] == 'Draft') ? 'selected' : ''; ?>>Draft</option>
-                                            </select>
-                                        </div>
-
-                                        <div class="col-md-4">
-                                            <label class="form-label form-label-custom">Appointment Types <span class="text-danger">*</span></label>
-                                            <select name="appointment_type" id="appointment_type" class="form-select form-select-custom" required>
-                                                <option value="in-clinic" <?= (isset($data['appointment_type']) && $data['appointment_type'] == 'in-clinic') ? 'selected' : ''; ?>>In Clinic (Face to face)</option>
-                                                <option value="video" <?= (isset($data['appointment_type']) && $data['appointment_type'] == 'video') ? 'selected' : ''; ?>>Video Call</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                            <?php endif; ?>
-
-                            <!-- Customer Details Section -->
-                            <div class="bg-white p-3 rounded-3 border shadow-sm">
-                                <input type="hidden" value="<?= $data['id']; ?>" name="customer_id" id="customer_id">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h6 class="fw-bold text-dark mb-0" style="font-size: 14px;">Customer Details</h6>
-                                    <div class="btn-group btn-group-sm customer-mode-toggle" role="group">
-                                        <button type="button" class="btn btn-outline-secondary active btn-new-mode" data-mode="new">
-                                            <i class="fa-solid fa-user-plus me-1"></i> New
-                                        </button>
-                                        <button type="button" class="btn btn-outline-secondary btn-select-mode" data-mode="select">
-                                            <i class="fa-solid fa-hand-pointer me-1"></i> Select
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="row g-3 mb-3 select-search-container d-none">
-                                    <div class="col-12">
-                                        <label class="form-label form-label-custom text-primary fw-bold">Search & Select Customer</label>
-                                        <select class="form-select form-select-custom master-customer-select">
-                                            <option value="">Select customer from list...</option>
-                                            <?php foreach ($customers as $cust): ?>
-                                                <option style="font-size: 10px;" value="<?= $cust['id']; ?>"
-                                                    data-firstname="<?= html_escape(($cust['first_name'] ?? '')); ?>"
-                                                    data-lastname="<?= html_escape(($cust['last_name'] ?? '')); ?>"
-                                                    data-phone="<?= html_escape($cust['phone_number'] ?? ''); ?>">
-                                                    <?= html_escape(($cust['first_name'] ?? '') . ' ' . ($cust['last_name'] ?? '')) . ' (' . html_escape($cust['phone_number'] ?? 'No Phone') . ')'; ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div class="row g-3">
-                                    <div class="col-md-4">
-                                        <input type="hidden" class="default-value-holder"
-                                            data-fname="<?= html_escape($data['first_name'] ?? ''); ?>"
-                                            data-lname="<?= html_escape($data['last_name'] ?? ''); ?>"
-                                            data-dphone="<?= html_escape($data['phone_number'] ?? ''); ?>">
-                                        <label class="form-label form-label-custom">Patient Name <span class="text-danger">*</span></label>
-                                        <input type="text" name="first-name" id="first-name" class="form-control form-control-custom patient-input" value="<?= html_escape(($data['first_name'] ?? '')); ?>" required placeholder="Enter patient name">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="d-flex justify-content-between align-items-center mb-1">
-                                            <label class="form-label form-label-custom mb-0">Contact Name</label>
-                                            <div class="form-check form-check-inline m-0">
-                                                <input class="form-check-input same-as-patient-checkbox" type="checkbox">
-                                                <label class="form-check-label text-muted" style="font-size: 11px;">Same as Patient</label>
-                                            </div>
-                                        </div>
-                                        <input type="text" name="last-name" id="last-name" class="form-control form-control-custom contact-input" value="<?= html_escape($data['last_name'] ?? ''); ?>" placeholder="Enter contact name">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label form-label-custom">Phone Number <span class="text-danger">*</span></label>
-                                        <input type="text" name="phone-number" id="phone-number" class="form-control form-control-custom phone-input" value="<?= html_escape($data['phone_number'] ?? ''); ?>" required placeholder="Enter phone number">
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-                        <div class="modal-footer border-top px-4 py-3 bg-white">
-                            <button type="button" class="btn btn-light border px-4 fw-semibold text-secondary shadow-sm" data-bs-dismiss="modal" style="border-radius: 8px;">Cancel</button>
-                            <button type="submit" class="btn btn-primary px-4 fw-semibold shadow-sm" style="border-radius: 8px;"><i class="fa-solid fa-check me-1"></i> Save</button>
-                        </div>
-                    </form>
-                </div>
+<!-- Single Dynamic Edit Modal -->
+<div class="modal fade" id="sharedCustomerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-bottom px-2 py-2 bg-primary text-white">
+                <h5 class="modal-title fw-bold" style="font-size: 16px;">
+                    <i class="fa-solid fa-pen-to-square text-white me-2"></i> Edit Appointment & Customer Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+
+            <form action="<?= site_url('customers/update') ?>" method="POST" class="customer-update-form">
+                <div class="modal-body p-4 bg-light" id="shared-modal-body-content">
+                    <!-- AJAX ke zariye form ke fields yahan dynamically load honge -->
+                    <div class="text-center py-4">
+                        <i class="fa-solid fa-spinner fa-spin fa-2x text-primary"></i>
+                        <p class="text-muted mt-2 mb-0" style="font-size: 12px;">Loading details...</p>
+                    </div>
+                </div>
+                <div class="modal-footer border-top px-4 py-3 bg-white">
+                    <button type="button" class="btn btn-light border px-4 fw-semibold text-secondary shadow-sm" data-bs-dismiss="modal" style="border-radius: 8px;">Cancel</button>
+                    <button type="submit" class="btn btn-primary px-4 fw-semibold shadow-sm" style="border-radius: 8px;"><i class="fa-solid fa-check me-1"></i> Save Changes</button>
+                </div>
+            </form>
         </div>
-<?php
-    endforeach;
-endif;
-?>
+    </div>
+</div>
 
 <?php end_section('content'); ?>
 
@@ -510,6 +404,47 @@ endif;
                 $(this).remove();
             });
         }, 6000);
+
+        $(document).on('click', '.edit-customer-btn', function() {
+    let customerId = $(this).data('customer-id');
+    let $modal =$('#sharedCustomerModal');
+    let $modalBody =$('#shared-modal-body-content');
+
+    // 1. Pehle modal khol dein aur loading state dikhayein
+    $modal.modal('show');$modalBody.html(`
+        <div class="text-center py-4">
+            <i class="fa-solid fa-spinner fa-spin fa-2x text-primary"></i>
+            <p class="text-muted mt-2 mb-0" style="font-size: 12px;">Loading details...</p>
+        </div>
+    `);
+
+   
+    $.ajax({
+        url: "<?= site_url('customers/get_edit_form'); ?>", 
+        type: "GET",
+        data: { 
+            customer_id: customerId ,
+            csrf_token: vars('csrf_token')
+        },
+        success: function(response) {
+          
+            $modalBody.html(response);
+
+            // Agar andar Select2 ya kuch initialize karna ho toh yahan kar sakte hain
+            $modal.find('.select2-enable').each(function() {
+                if (!$(this).hasClass("select2-hidden-accessible")) {
+                    $(this).select2({
+                        theme: 'bootstrap-5',
+                        dropdownParent: $modal
+                    });
+                }
+            });
+        },
+        error: function() {
+            $modalBody.html('<div class="alert alert-danger text-center mb-0">Failed to load customer details. Please try again.</div>');
+        }
+    });
+});
 
         // Initialize Select2 inside Bootstrap Modals properly
         $('.modal').on('shown.bs.modal', function() {

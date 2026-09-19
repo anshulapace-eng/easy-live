@@ -374,7 +374,13 @@ class Calendar extends EA_Controller
             }
 
             // --- LOG APPOINTMENT SAVE ---
-            $action_label = $manage_mode ? 'Updated Appointment (Backend)' : 'Created Appointment (Backend)';
+            $start = $appointment['start_datetime'] ?? '';
+            $end = $appointment['end_datetime'] ?? '';
+
+            $action_label = $manage_mode 
+                ? "Updated Appointment (Backend) for {$start} to {$end}" 
+                : "Created Appointment (Backend) for {$start} to {$end}";
+
             $this->log_appointment_action((int)$appointment['id'], $action_label);
 
             $appointment = $this->appointments_model->find($appointment['id']);
@@ -526,6 +532,8 @@ class Calendar extends EA_Controller
     {
         try {
             $appointment_id = request('appointment_id');
+            $start_datetime = request('start_datetime');
+        $end_datetime = request('end_datetime');
             $cancellation_reason = (string) request('cancellation_reason');
             $notify_users = filter_var(request('notify_users', false), FILTER_VALIDATE_BOOLEAN);
 
@@ -543,8 +551,13 @@ class Calendar extends EA_Controller
             // 3. Database me save kar dein
             $this->appointments_model->save($appointment);
 
-            // --- LOG APPOINTMENT CANCEL ---
-            $this->log_appointment_action((int)$appointment_id, 'Canceled', "Reason: " . ($cancellation_reason ?: 'None'));
+            $start_val = $start_datetime ?: 'N/A';
+        $end_val = $end_datetime ?: 'N/A';
+        $reason_val = $cancellation_reason ?: 'None';
+
+        $log_msg = "Canceled (Slot: {$start_val} to {$end_val}). Reason: {$reason_val}";
+
+            $this->log_appointment_action((int)$appointment_id, $log_msg);
 
             // 4. Success response
             json_response([
@@ -699,7 +712,7 @@ class Calendar extends EA_Controller
      *
      * This method will return all the calendar events within a specified period.
      */
-    public function get_calendar_appointments_for_table_view(): void
+   public function get_calendar_appointments_for_table_view(): void
     {
         try {
             method('post');
@@ -714,7 +727,6 @@ class Calendar extends EA_Controller
             check('end_date', 'date');
 
             $start_date = request('start_date') . ' 00:00:00';
-
             $end_date = request('end_date') . ' 23:59:59';
 
             $response = [
@@ -728,6 +740,13 @@ class Calendar extends EA_Controller
                 ]),
             ];
 
+            // --- Working Plan Exceptions Fetch Karein ---
+            $this->db->select('*');
+            $this->db->from('ea_working_plan_exceptions');
+            $this->db->where('start_date <=', request('end_date'));
+            $this->db->where('end_date >=', request('start_date'));
+            $response['working_plan_exceptions'] = $this->db->get()->result_array();
+
             foreach ($response['appointments'] as &$appointment) {
                 $appointment['provider'] = $this->providers_model->find($appointment['id_users_provider']);
                 $appointment['service'] = $this->services_model->find($appointment['id_services']);
@@ -737,7 +756,6 @@ class Calendar extends EA_Controller
             unset($appointment);
 
             $user_id = session('user_id');
-
             $role_slug = session('role_slug');
 
             // If the current user is a provider he must only see his own appointments.
@@ -996,6 +1014,8 @@ class Calendar extends EA_Controller
             }
 
             $appointment_id = request('appointment_id');
+            $start_datetime = $this->input->post('start_datetime');
+           $end_datetime = $this->input->post('end_datetime');
             $check_type = request('check_type');
 
             if (empty($appointment_id)) {
@@ -1018,7 +1038,8 @@ class Calendar extends EA_Controller
             ]);
 
             $action_name=((int) $check_type === 1) ? 'Checked In' : 'Checked Out';
-            $this->log_appointment_action((int)$appointment_id, $action_name);
+            $log_message = "{$action_name} for {$start_datetime} to {$end_datetime}";
+            $this->log_appointment_action((int)$appointment_id, $log_message);
 
             json_response([
                 'success' => true,
@@ -1168,7 +1189,10 @@ class Calendar extends EA_Controller
     }
 
     if (isset($post_data['is_unavailability']) && $post_data['is_unavailability'] == '0') {
-        $this->log_appointment_action((int)$appointment_id, 'Made Slot Available (Unavailability Removed)');
+        $start_datetime = $this->input->post('start_datetime');
+        $end_datetime = $this->input->post('end_datetime');
+        $log_message = "Made Slot Available (Unavailability Removed for {$start_datetime} to {$end_datetime})";
+        $this->log_appointment_action((int)$appointment_id, $log_message);
         $this->db->where('id', $appointment_id)->delete('appointments');
     } else {
         $this->db->where('id', $appointment_id)->update('appointments', $post_data);

@@ -50,12 +50,12 @@
         color: white;
         padding: 8px 10px;
         border-radius: 8px;
-        font-size: 16px;
+        font-size: 10px;
     }
 
     .header-left h4 {
         margin: 0;
-        font-size: 22px;
+        font-size: 16px;
         font-weight: 700;
         color: #000000;
     }
@@ -63,7 +63,7 @@
     .date-navigator {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 4px;
         position: relative;
     }
 
@@ -71,9 +71,9 @@
         background: #ffffff;
         border: 1px solid #cbd5e1;
         border-radius: 6px;
-        padding: 6px 12px;
+        padding: 6px 10px;
         cursor: pointer;
-        font-size: 14px;
+        font-size: 11px;
         font-weight: 600;
         color: #000000;
         transition: all 0.2s;
@@ -87,10 +87,10 @@
     }
 
     .current-date-range {
-        font-size: 18px;
+        font-size: 12px;
         font-weight: 700;
         color: #000000;
-        min-width: 220px;
+        min-width: 203px;
         text-align: center;
     }
 
@@ -331,37 +331,49 @@
 
     /* Main Grid Section */
     .diary-grid-container {
-        flex: 1;
-        overflow: auto;
-        background: #ffffff;
-    }
+    flex: 1;
+    overflow: auto;
+    background: #ffffff;
+    position: relative; /* Scrollbar ko sticky/fixed position support dene ke liye */
+}
+
+
 
     .diary-table {
-        width: 100%;
-        min-width: 800px;
+        width: max-content;
         border-collapse: separate;
         border-spacing: 0;
-        table-layout: fixed;
+        table-layout: fixed; /* Yeh cells ko stretch hone se rokega */
     }
 
     .diary-table th {
         background: #ffffff;
         border-bottom: 1px solid #e2e8f0;
         border-right: 1px solid #f1f5f9;
-        padding: 4px 8px;
+        padding: 4px 8px !important;
         text-align: center;
         position: sticky;
         top: 0;
         z-index: 10;
-        box-shadow: 0 1px 0 #e2e8f0;
+        width: 130px !important; /* Min-width ki jagah fixed width dein */
+        min-width: 130px !important;
+        max-width: 130px !important;
+        height: 42px !important;
+        vertical-align: middle !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
-    .diary-table th:first-child {
+.diary-table th:first-child {
         position: sticky;
         left: 0;
         z-index: 12;
         background: #ffffff;
         border-right: 1px solid #e2e8f0;
+        width: 80px !important;
+        min-width: 80px !important;
+        max-width: 80px !important;
     }
 
     .diary-table th {
@@ -386,17 +398,25 @@
         text-transform: none;
     }
 
-    .diary-table td {
+   .diary-table td {
         border-bottom: 1px solid #f1f5f9;
         border-right: 1px solid #f1f5f9;
         padding: 2px 4px;
         height: 28px;
         vertical-align: middle;
         font-size: 11px;
+        width: 130px !important;
+        min-width: 130px !important;
+        max-width: 130px !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .time-cell {
-        width: 75px;
+        width: 80px !important;
+        min-width: 80px !important;
+        max-width: 80px !important;
         text-align: right;
         padding-right: 8px !important;
         font-weight: 700;
@@ -408,6 +428,25 @@
         z-index: 5;
         border-right: 1px solid #e2e8f0 !important;
     }
+    
+    .diary-grid-container::-webkit-scrollbar {
+    height: 12px !important; /* Yahan aap height apne hisaab se kam ya zyada kar sakte hain (e.g., 10px ya 14px) */
+}
+
+/* Scrollbar track ka background */
+.diary-grid-container::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+/* Scrollbar handle (thumb) ka design */
+.diary-grid-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 6px;
+}
+
+.diary-grid-container::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
 
     .slot-cell {
         cursor: pointer;
@@ -422,12 +461,14 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 4px 8px;
+        padding: 4px 6px;
         border-radius: 4px;
-        font-size: 11.5px;
+        font-size: 11px;
         margin: 1px 0;
         width: 100%;
+        max-width: 120px; /* Card ki width ko cell ke andar fit rakhega */
         box-sizing: border-box;
+        overflow: hidden;
     }
 
     .apt-confirmed {
@@ -453,11 +494,12 @@
         white-space: nowrap;
     }
 
-    .apt-name {
+   .apt-name {
         font-weight: 700;
         color: #000000;
         overflow: hidden;
         text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .apt-right-icons {
@@ -663,6 +705,34 @@
             padding: 8px 12px;
         }
     }
+    
+     /* --- DAY VIEW SPECIFIC OVERRIDES --- */
+.diary-table.day-view-active {
+    width: 100%;
+    table-layout: auto;
+}
+
+.diary-table.day-view-active th:not(.time-cell):not(:first-child),
+.diary-table.day-view-active td:not(.time-cell):not(:first-child) {
+    width: auto !important;
+    min-width: auto !important;
+    max-width: none !important;
+    text-align: center !important;
+    vertical-align: middle !important; /* Vertically center */
+}
+
+/* Center and stretch the appointment cards in Day view */
+.diary-table.day-view-active .apt-card {
+    margin: 4px auto; /* Horizontally center */
+    max-width: 90%; /* Stretches the card nicely instead of locking to 120px */
+}
+
+.diary-table.day-view-active .blocked-slot,
+.diary-table.day-view-active .break-slot {
+    display: table-cell;
+    vertical-align: middle !important;
+}
+
 
     .modal-header,
     #message-modal .modal-header,
@@ -746,104 +816,88 @@
     pointer-events: none;
 }
 
-/* 1. General Body & Table Font Reduction */
-    .appointment-diary-wrapper, 
-    .diary-table td, 
-    .diary-table th,
-    .diary-sidebar,
-    .legend-bar {
-        font-size: 10.5px !important;
+@media (max-width: 768px) {
+    .diary-body {
+        flex-direction: column;
     }
 
-    /* 2. Header & Date Navigator Compactness */
-    .header-left h4 {
-        font-size: 14px !important;
-    }
-    .current-date-range {
-        font-size: 12.5px !important;
-        min-width: 150px !important;
-    }
-    .nav-btn, #today-btn, #datepicker-trigger-btn {
-        font-size: 11px !important;
-        padding: 3px 6px !important;
+    .diary-sidebar {
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 8px 12px;
+        order: -1;
+        background: #ffffff;
     }
 
-    /* 3. Table Header & Time Slots */
-    .diary-table th {
-        height: 32px !important;
-        padding: 2px !important;
+    .sidebar-controls-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        gap: 6px;
+        flex-wrap: nowrap; /* Sabhi ko ek hi line me rakhne ke liye */
     }
-    .th-day-name {
+
+    /* View toggle aur Scroll buttons ko ek line me fit karne ke liye */
+    .sidebar-controls-wrapper > div:first-child {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex: 1;
+        overflow-x: auto;
+    }
+
+    .view-toggle-group {
+        width: auto !important;
+        flex-shrink: 0;
+        margin-bottom: 0 !important;
+    }
+
+    /* Prev aur Next buttons ka size compact karne ke liye taaki line me fit ho jayein */
+    .sidebar-controls-wrapper #scroll-left-btn,
+    .sidebar-controls-wrapper #scroll-right-btn {
+        flex-shrink: 0;
+        padding: 6px 10px !important;
         font-size: 12px !important;
-    }
-    .th-day-date {
-        font-size: 11px !important;
-    }
-    .time-cell {
-        font-size: 10px !important;
-        width: 65px !important;
+        width: auto;
     }
 
-    /* 4. Appointment Cards Compactness */
-    .apt-card {
-        padding: 2px 4px !important;
-        font-size: 10px !important;
-        margin: 0.5px 0 !important;
-    }
-    .apt-name {
-        font-size: 10px !important;
-    }
-    .apt-right-icons i, .apt-left-info i {
-        font-size: 9.5px !important;
-    }
-
-    /* 5. Sidebar Mini Calendar & Controls */
-    .mini-cal-grid {
-        font-size: 10px !important;
-    }
-    .mini-cal-date {
-        font-size: 10px !important;
-        padding: 2px 0 !important;
-    }
-    .mini-calendar-header {
-        font-size: 12px !important;
-        margin-bottom: 8px !important;
-    }
     .sidebar-section-title {
-        font-size: 11px !important;
-        margin-top: 8px !important;
-        margin-bottom: 4px !important;
-    }
-    .view-toggle-btn {
-        font-size: 11px !important;
-        padding: 4px !important;
-    }
-    .staff-box {
-        font-size: 11px !important;
-        padding: 4px 8px !important;
+        display: none;
     }
 
-    /* 6. Legends Bar Compactness */
-    .legend-bar {
-        font-size: 10px !important;
-        padding: 6px 16px !important;
-        gap: 16px !important;
-    }
-    .legend-item {
-        gap: 4px !important;
-    }
-    .legend-bar span {
-        width: 10px !important;
-        height: 10px !important;
+    .mobile-mini-cal-btn {
+        display: flex;
+        flex-shrink: 0;
+        padding: 6px 10px;
     }
 
-    /* 7. Modals Font Scaling */
-    #appointment-details-modal .modal-title {
-        font-size: 12px !important;
+    .mobile-mini-cal-btn.active-btn {
+        background: #0052cc;
+        color: white;
+        border-color: #0052cc;
     }
-    #appointment-details-modal .modal-body {
-        font-size: 10px !important;
+
+    .mini-cal-wrapper {
+        display: none;
+        width: 100%;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid #e2e8f0;
     }
+
+    .mini-cal-wrapper.mobile-visible {
+        display: block;
+        animation: fadeIn 0.2s ease-in-out;
+    }
+
+    .settings-btn, .sidebar-promo-card {
+        display: none;
+    }
+    
+   
 </style>
 
 <div id="toast-message" class="custom-toast">
@@ -854,110 +908,74 @@
 </div>
 
 <div class="appointment-diary-wrapper">
-<style>
-    /* Compact Mobile & Fluid Single-Row Adjustments */
-    @media (max-width: 1200px) {
-        .diary-header {
-            padding: 8px 12px !important;
-            gap: 6px !important;
-        }
-        .header-left h4 {
-            font-size: 15px !important;
-        }
-        .header-left .icon-box {
-            width: 30px !important;
-            height: 30px !important;
-            font-size: 12px !important;
-            padding: 0 !important;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .current-date-range {
-            font-size: 12.5px !important;
-            min-width: 140px !important;
-        }
-        .nav-btn, .btn-icon-only, #today-btn {
-            padding: 3px 7px !important;
-            font-size: 11px !important;
-        }
-        .header-right .btn, #new-appointment-btn {
-            padding: 4px 10px !important;
-            font-size: 11.5px !important;
-        }
-    }
-
-
-    
-</style>
-
-<div class="diary-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 8px 16px; gap: 8px;">
-
-    <!-- Left: Title -->
-    <div class="header-left" style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-shrink: 0; margin-bottom: 0;">
-        <div class="icon-box" style="background: #0d7774; color: white; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px;"><i class="fa-regular fa-calendar-days"></i></div>
-        <h4 style="margin: 0; font-size: 16px; font-weight: 700; color: #17252d; font-family: 'Plus Jakarta Sans', sans-serif; white-space: nowrap; line-height: 1.2;">Appointment Diary</h4>
-    </div>
-
-    <!-- Center: Date Navigator -->
-    <div class="date-navigator" style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap; position: relative; margin-bottom: 0; flex-shrink: 1;">
-        <button class="nav-btn" id="prev-btn" style="padding: 4px 8px; font-size: 11px; display: inline-flex; align-items: center; justify-content: center;"><i class="fa-solid fa-chevron-left"></i></button>
-        <div class="current-date-range" id="date-range-display" style="font-size: 13.5px; font-weight: 700; color: #17252d; min-width: 175px; text-align: center; line-height: 1.2;">Loading...</div>
-        <button class="nav-btn" id="next-btn" style="padding: 4px 8px; font-size: 11px; display: inline-flex; align-items: center; justify-content: center;"><i class="fa-solid fa-chevron-right"></i></button>
-
-        <button class="nav-btn" id="today-btn" style="padding: 4px 10px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center;">Today</button>
-
-        <button class="btn-icon-only" id="datepicker-trigger-btn" title="Pick Date" style="padding: 4px 8px; font-size: 12px; display: inline-flex; align-items: center; justify-content: center;">
-            <i class="fa-regular fa-calendar"></i>
-        </button>
-        <input type="date" id="calendar-date-picker" style="position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0;">
-    </div>
-
-    <!-- Right: Export Report & New Appointment Buttons -->
-    <div class="header-right" style="display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-bottom: 0;">
-        
-        <!-- Zaroori Hidden Triggers for Auto-Refresh -->
-        <button id="reload-appointments" style="display: none;"></button>
-        <a href="#" id="insert-appointment" style="display: none;"></a>
-        <a href="#" id="insert-unavailability" style="display: none;"></a>
-
-        <!-- Export Dropdown -->
-        <div class="dropdown export-btn-shadow" style="display: inline-block; margin-bottom: 0;">
-            <button class="btn dropdown-toggle shadow-sm" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: #fff; color:#17252d; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 10px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">
-                <i class="fa-solid fa-file-excel" style="color: #137333 !important;"></i> Export
-            </button>
-            <ul class="dropdown-menu p-3 shadow-sm" aria-labelledby="exportDropdown" style="width: 230px; font-size: 13px;">
-                <li><a class="dropdown-item fw-bold export-option" href="#" data-range="today"><i class="fa-solid fa-calendar-day me-2 text-primary"></i> Today</a></li>
-                <li>
-                    <a class="dropdown-item fw-bold export-option d-flex align-items-center py-2" href="#" data-range="yesterday">
-                        <div style="width: 24px; text-align: center; display: flex; justify-content: center;">
-                            <span class="d-inline-flex align-items-center justify-content-center bg-success text-white rounded-circle" style="width: 16px; height: 16px;">
-                                <i class="fa-solid fa-arrow-right-long" style="font-size: 9px;"></i>
-                            </span>
-                        </div>
-                        Yesterday
-                    </a>
-                </li>
-                <li><a class="dropdown-item fw-bold export-option" href="#" data-range="tomorrow"><i class="fa-solid fa-calendar-plus me-2 text-success"></i> Tomorrow</a></li>
-                <li><a class="dropdown-item fw-bold export-option" href="#" data-range="week"><i class="fa-solid fa-calendar-week me-2 text-warning"></i> This Week</a></li>
-                <li>
-                    <hr class="dropdown-divider">
-                </li>
-                <li>
-                    <label class="form-label fw-bold mb-1" style="font-size: 11px;">Custom Range:</label>
-                    <input type="date" id="export-start-date" class="form-control form-control-sm mb-2">
-                    <input type="date" id="export-end-date" class="form-control form-control-sm mb-2">
-                    <button type="button" class="btn btn-sm btn-primary w-100" id="btn-custom-export" style="font-size: 12px;">Download Excel</button>
-                </li>
-            </ul>
+    <!-- Header -->
+    <div class="diary-header">
+        <div class="header-left">
+            <div class="icon-box"><i class="fa-regular fa-calendar-days"></i></div>
+            <h4>Appointment Diary</h4>
         </div>
 
-        <!-- New Appointment Button -->
-        <button class="btn" style="background: #0d7774; color:#fff; font-weight: 600; border-radius: 6px; padding: 4px 10px; font-size: 12px; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;" id="new-appointment-btn">
-            <i class="fa-solid fa-plus"></i> New Appointment
-        </button>
+        <div class="date-navigator">
+            <button class="nav-btn" id="prev-btn"><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="current-date-range" id="date-range-display">Loading...</div>
+            <button class="nav-btn" id="next-btn"><i class="fa-solid fa-chevron-right"></i></button>
+
+            <button class="nav-btn" id="today-btn">Today</button>
+
+            <button class="btn-icon-only" id="datepicker-trigger-btn" title="Pick Date">
+                <i class="fa-regular fa-calendar"></i>
+            </button>
+            <input type="date" id="calendar-date-picker" style="position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0;">
+        </div>
+
+        <div class="header-right">
+            <button id="reload-appointments" style="display: none;"></button>
+            <a href="#" id="insert-appointment" style="display: none;"></a>
+            <a href="#" id="insert-unavailability" style="display: none;"></a>
+
+            <!-- Export Report Dropdown -->
+            <div class="header-right">
+                <button id="reload-appointments" style="display: none;"></button>
+                <a href="#" id="insert-appointment" style="display: none;"></a>
+                <a href="#" id="insert-unavailability" style="display: none;"></a>
+
+                <div class="dropdown export-btn-shadow" style="display: inline-block;">
+                    <button class="btn-blue dropdown-toggle shadow-sm" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: #fff; color:#000000; font-size: 11px; padding: 7px;">
+                    <i class="fa-solid fa-file-excel" style="color: #137333 !important;"></i> Export Report
+                </button>
+                    <ul class="dropdown-menu p-3 shadow-sm" aria-labelledby="exportDropdown" style="width: 250px; font-size: 13px;">
+                        <li><a class="dropdown-item fw-bold export-option" href="#" data-range="today"><i class="fa-solid fa-calendar-day me-2 text-primary"></i> Today</a></li>
+
+                        <!-- YESTERDAY WITH ARROW ICON -->
+                        <li>
+                            <a class="dropdown-item fw-bold export-option d-flex align-items-center py-2" href="#" data-range="yesterday">
+                                <div style="width: 24px; text-align: center; display: flex; justify-content: center;">
+                                    <span class="d-inline-flex align-items-center justify-content-center bg-success text-white rounded-circle" style="width: 16px; height: 16px;">
+                                        <i class="fa-solid fa-arrow-right-long" style="font-size: 9px;"></i>
+                                    </span>
+                                </div>
+                                Yesterday
+                            </a>
+                        </li>
+
+                        <li><a class="dropdown-item fw-bold export-option" href="#" data-range="tomorrow"><i class="fa-solid fa-calendar-plus me-2 text-success"></i> Tomorrow</a></li>
+                        <li><a class="dropdown-item fw-bold export-option" href="#" data-range="week"><i class="fa-solid fa-calendar-week me-2 text-warning"></i> This Week</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <label class="form-label fw-bold mb-1">Custom Range:</label>
+                            <input type="date" id="export-start-date" class="form-control form-control-sm mb-2">
+                            <input type="date" id="export-end-date" class="form-control form-control-sm mb-2">
+                            <button type="button" class="btn btn-sm btn-primary w-100" id="btn-custom-export">Download Excel</button>
+                        </li>
+                    </ul>
+                </div>
+
+                <button class="btn" style="background: #5A3FEE; color:#fff; font-size: 10px; padding: 7px;" id="new-appointment-btn"><i class="fa-solid fa-plus"></i> New Appointment</button>
+            </div>
+        </div>
     </div>
-</div>
 
     <!-- Legends Bar -->
     <div class="legend-bar">
@@ -1000,6 +1018,16 @@
                     <div class="view-toggle-group">
                         <button class="view-toggle-btn active" id="view-week"><i class="fa-regular fa-calendar-days"></i> Week</button>
                         <button class="view-toggle-btn" id="view-day"><i class="fa-regular fa-calendar"></i> Day</button>
+                    </div>
+                    
+                    <!-- Left / Right Quick Scroll Buttons -->
+                    <div style="display: flex; gap: 6px; margin-bottom: 4px;">
+                        <button type="button" class="nav-btn" id="scroll-left-btn" style="flex: 1; padding: 6px 4px; font-size: 11.5px; justify-content: center;" title="Scroll Left">
+                            <i class="fa-solid fa-chevron-left"></i> Prev
+                        </button>
+                        <button type="button" class="nav-btn" id="scroll-right-btn" style="flex: 1; padding: 6px 4px; font-size: 11.5px; justify-content: center;" title="Scroll Right">
+                            Next <i class="fa-solid fa-chevron-right"></i>
+                        </button>
                     </div>
                 </div>
 
@@ -1232,6 +1260,8 @@
                 <!-- Footer Actions -->
                 <div id="modal-action-buttons" style="display: flex; gap: 6px;">
                     <input type="hidden" id="cancelid" name="cancelid" value="">
+                    <input type="hidden" id="modal-start-datetime" value="">
+                    <input type="hidden" id="modal-end-datetime" value="">
 
                     <div class="dropdown" style="flex: 1;">
                         <button class="btn dropdown-toggle w-100" type="button" id="appointmentActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="padding: 5px 0; border: 1px solid #cbd5e1; background: #ffffff; color: #334155; border-radius: 6px; font-weight: 700; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
@@ -1270,6 +1300,8 @@
             </div>
             <div class="modal-footer border-0">
                 <input type="hidden" id="delete-appointment-id" value="">
+                <input type="hidden" id="delete-start-datetime" value="">
+                <input type="hidden" id="delete-end-datetime" value="">
                 <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">No</button>
                 <button type="button" class="btn btn-confirm-delete" id="btn-confirm-delete-action">Yes</button>
             </div>
@@ -1337,6 +1369,18 @@
     function hideToast() {
         $('#toast-message').fadeOut(200);
     }
+    
+    $(document).on('click', '#scroll-left-btn', function() {
+    $('.diary-grid-container').animate({
+        scrollLeft: '-=500px'
+    }, 250);
+});
+
+$(document).on('click', '#scroll-right-btn', function() {
+    $('.diary-grid-container').animate({
+        scrollLeft: '+=500px'
+    }, 250);
+});
 
     $(document).ready(function() {
 
@@ -1457,8 +1501,12 @@
 
         $(document).on('click', '#cancelbutton', function() {
             const appointmentId = $('#cancelid').val();
+             const startDatetime = $('#modal-start-datetime').val();
+    const endDatetime = $('#modal-end-datetime').val();
             if (appointmentId) {
                 $('#delete-appointment-id').val(appointmentId);
+                $('#delete-start-datetime').val(startDatetime);
+        $('#delete-end-datetime').val(endDatetime);
                 $('#appointment-details-modal').modal('hide');
                 $('#deleteAppointmentModal').modal('show');
             } else {
@@ -1471,6 +1519,8 @@
 
         $("#btn-confirm-delete-action").on("click", function() {
             const appointmentId = $("#delete-appointment-id").val();
+            const startDatetime = $("#delete-start-datetime").val();
+    const endDatetime = $("#delete-end-datetime").val();
             if (!appointmentId) {
                 alert("Appointment ID nahi mili!");
                 return;
@@ -1482,6 +1532,8 @@
                 dataType: "json",
                 data: {
                     appointment_id: appointmentId,
+                    start_datetime: startDatetime,
+            end_datetime: endDatetime,
                     cancellation_reason: "noting",
                     notify_users: true,
                     csrf_token: vars('csrf_token')
@@ -1511,6 +1563,8 @@
             e.preventDefault();
 
             const appointmentId = $('#cancelid').val();
+            const startDatetime = $('#modal-start-datetime').val();
+           const endDatetime = $('#modal-end-datetime').val();
             const checkType = $(this).data('check-type');
             const successMsg = checkType === 1 ? "Checked in successfully." : "Checked out successfully.";
 
@@ -1525,6 +1579,8 @@
                 dataType: "json",
                 data: {
                     appointment_id: appointmentId,
+                    start_datetime: startDatetime,
+                    end_datetime: endDatetime,
                     check_type: checkType,
                     csrf_token: vars('csrf_token')
                 },
@@ -1581,6 +1637,12 @@
         if (actionData.action === 'delete_unavailability') {
             if (!confirm("Are you sure you want to make this slot available?")) {
                 return;
+            }
+            if (actionData.start_datetime) {
+                postData.start_datetime = actionData.start_datetime;
+            }
+            if (actionData.end_datetime) {
+                postData.end_datetime = actionData.end_datetime;
             }
             postData.is_unavailability = 0;
             successMsg = "Slot is now available!";
@@ -1703,6 +1765,7 @@
         let appointmentsData = [];
         let unavailabilitiesData = [];
         let blockedPeriodsData = [];
+        let workingPlanExceptions = [];
 
         let workingPlan = {};
         try {
@@ -1726,18 +1789,40 @@
             6: '#0d9488'
         };
 
+        // function getCalendarDateRange() {
+        //     // Selected date ka poora mahina (Month start se Month end tak)
+        //     const startDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+        //     startDate.setHours(0, 0, 0, 0);
+
+        //     const endDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0);
+        //     endDate.setHours(23, 59, 59, 999);
+
+        //     return {
+        //         startDate,
+        //         endDate
+        //     };
+        // }
+        
         function getCalendarDateRange() {
-            // Selected date ka poora mahina (Month start se Month end tak)
-            const startDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
-            startDate.setHours(0, 0, 0, 0);
+            if (currentView === 'week') {
+                const weekDays = getWeekDays(selectedDate);
+                const startDate = new Date(weekDays[0].dateObj);
+                startDate.setHours(0, 0, 0, 0);
 
-            const endDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0);
-            endDate.setHours(23, 59, 59, 999);
+                // const endDate = new Date(weekDays[6].dateObj);
+                const endDate = new Date(weekDays[weekDays.length - 1].dateObj);
+                endDate.setHours(23, 59, 59, 999);
 
-            return {
-                startDate,
-                endDate
-            };
+                return { startDate, endDate };
+            } else {
+                const startDate = new Date(selectedDate);
+                startDate.setHours(0, 0, 0, 0);
+
+                const endDate = new Date(selectedDate);
+                endDate.setHours(23, 59, 59, 999);
+
+                return { startDate, endDate };
+            }
         }
 
         window.loadCalendarData = function() {
@@ -1749,6 +1834,7 @@
                 appointmentsData = response.appointments || [];
                 unavailabilitiesData = response.unavailabilities || [];
                 blockedPeriodsData = response.blocked_periods || [];
+                workingPlanExceptions = response.working_plan_exceptions || [];
             });
         }
 
@@ -1762,25 +1848,83 @@
         }
 
         function getWeekDays(startDate) {
-            const monday = new Date(startDate);
-            let weekDays = [];
-            for (let i = 0; i < 7; i++) {
-                let day = new Date(monday);
-                day.setDate(monday.getDate() + i);
-                weekDays.push({
-                    dateObj: day,
-                    dayKey: dayKeysMap[day.getDay()],
-                    dayIndex: day.getDay(),
-                    name: dayNamesShort[day.getDay()],
-                    dateStr: `${shortMonthNames[day.getMonth()]} ${day.getDate()}`
-                });
-            }
-            return weekDays;
-        }
+    const monday = new Date(startDate);
+    let weekDays = [];
+    for (let i = 0; i < 365; i++) { // Yahan 7 ki jagah 365 kar dein
+        let day = new Date(monday);
+        day.setDate(monday.getDate() + i);
+        weekDays.push({
+            dateObj: day,
+            dayKey: dayKeysMap[day.getDay()],
+            dayIndex: day.getDay(),
+            name: dayNamesShort[day.getDay()],
+            dateStr: `${shortMonthNames[day.getMonth()]} ${day.getDate()}`
+        });
+    }
+    return weekDays;
+}
 
-        function generateSlotsWithBreaks(dayKey) {
+        // function generateSlotsWithBreaks(dayKey) {
+        //     let slotList = [];
+        //     let dayPlan = workingPlan[dayKey];
+        //     if (!dayPlan) return slotList;
+
+        //     let [startHour, startMin] = dayPlan.start.split(':').map(Number);
+        //     let [endHour, endMin] = dayPlan.end.split(':').map(Number);
+
+        //     let currentMinutes = startHour * 60 + startMin;
+        //     let endMinutes = endHour * 60 + endMin;
+        //     let breaks = dayPlan.breaks || [];
+
+        //     while (currentMinutes < endMinutes) {
+        //         let h = Math.floor(currentMinutes / 60);
+        //         let m = currentMinutes % 60;
+
+        //         let isBreak = breaks.some(b => {
+        //             let [bStartH, bStartM] = b.start.split(':').map(Number);
+        //             let [bEndH, bEndM] = b.end.split(':').map(Number);
+        //             return currentMinutes >= (bStartH * 60 + bStartM) && currentMinutes < (bEndH * 60 + bEndM);
+        //         });
+
+        //         let period = h >= 12 ? 'PM' : 'AM';
+        //         let displayHour = h % 12 || 12;
+        //         let displayMin = String(m).padStart(2, '0');
+        //         let timeStr = `${displayHour}:${displayMin} ${period}`;
+
+        //         slotList.push({
+        //             time: timeStr,
+        //             isBreak: isBreak
+        //         });
+
+        //         currentMinutes += 15;
+        //     }
+        //     return slotList;
+        // }
+        
+        function generateSlotsWithBreaks(dateStr,dayKey) {
             let slotList = [];
-            let dayPlan = workingPlan[dayKey];
+            
+            let dayPlan = null;
+            let exception = workingPlanExceptions.find(ex => {
+                return dateStr >= ex.start_date && dateStr <= ex.end_date;
+            });
+
+            if (exception) {
+                // अगर exception मिला और start/end टाइम नहीं है, तो ऑफिस बंद है
+                if (!exception.start_time || !exception.end_time) {
+                    return slotList; 
+                }
+                dayPlan = {
+                    start: exception.start_time,
+                    end: exception.end_time,
+                    breaks: exception.breaks ? JSON.parse(exception.breaks) : []
+                };
+            } else {
+                // अगर exception नहीं है तो डिफ़ॉल्ट वीकली प्लान इस्तेमाल करें
+                dayPlan = workingPlan[dayKey];
+            }
+            
+            // let dayPlan = workingPlan[dayKey];
             if (!dayPlan) return slotList;
 
             let [startHour, startMin] = dayPlan.start.split(':').map(Number);
@@ -1925,6 +2069,8 @@
             $modal.find('.customer-avatar').text(customerInitials);
             $modal.find('.customer-name').text(customerName);
             $modal.find('#cancelid').val(appointment.id);
+            $modal.find('#modal-start-datetime').val(appointment.start_datetime);
+            $modal.find('#modal-end-datetime').val(appointment.end_datetime);
 
             const customerPhone = appointment.customer?.phone_number || '';
             let cleanPhone = String(customerPhone).replace(/\D/g, '');
@@ -2147,12 +2293,15 @@
         window.renderCalendar = function() {
             const thead = $('#diary-thead').empty();
             const tbody = $('#appointment-tbody').empty();
+            const diaryTable = $('.diary-table');
             renderMiniCalendar();
 
             if (currentView === 'week') {
+                diaryTable.removeClass('day-view-active');
                 const weekDays = getWeekDays(selectedDate);
                 const startDay = weekDays[0].dateObj;
-                const endDay = weekDays[6].dateObj;
+                // const endDay = weekDays[6].dateObj;
+                const endDay = weekDays[weekDays.length - 1].dateObj;
 
                 $('#date-range-display').text(`${monthNames[startDay.getMonth()]} ${startDay.getDate()} – ${monthNames[endDay.getMonth()]} ${endDay.getDate()}, ${endDay.getFullYear()}`);
 
@@ -2170,7 +2319,10 @@
 
                 let allSlotsMap = new Map();
                 weekDays.forEach(d => {
-                    generateSlotsWithBreaks(d.dayKey).forEach(slotObj => {
+                    
+                    const dateAttr = `${d.dateObj.getFullYear()}-${String(d.dateObj.getMonth() + 1).padStart(2, '0')}-${String(d.dateObj.getDate()).padStart(2, '0')}`;
+                    
+                    generateSlotsWithBreaks(dateAttr,d.dayKey).forEach(slotObj => {
                         allSlotsMap.set(slotObj.time, true);
                     });
                 });
@@ -2182,7 +2334,24 @@
                     weekDays.forEach((d) => {
                         const dateAttr = `${d.dateObj.getFullYear()}-${String(d.dateObj.getMonth() + 1).padStart(2, '0')}-${String(d.dateObj.getDate()).padStart(2, '0')}`;
 
-                        if (!workingPlan[d.dayKey]) {
+                        // if (!workingPlan[d.dayKey]) {
+                        //     if (index === 0) {
+                        //         row += `<td rowspan="${uniqueTimeSlots.length}" class="holiday-col" style="background: #FAF9FF; text-align: center; border-right: 1px solid #e2e8f0;">
+                        //             <div class="holiday-content" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+                        //                 <div style="margin-bottom: 8px; filter: drop-shadow(0px 4px 6px rgba(157, 123, 255, 0.35));">
+                        //                     <i class="fa-solid fa-calendar-xmark" style="font-size: 36px; color: #9D7BFF;"></i>
+                        //                 </div>
+                        //                 <div style="font-weight: 700; font-size: 15px; color: #1E1B4B; margin-bottom: 2px; letter-spacing: -0.3px;">Holiday</div>
+                        //                 <div style="font-size: 12.5px; font-weight: 600; color: #9D7BFF;">(Office Closed)</div>
+                        //             </div>
+                        //         </td>`;
+                        //     }
+                        //     return;
+                        // }
+
+                        let daySlots = generateSlotsWithBreaks(dateAttr, d.dayKey);
+                        
+                        if (daySlots.length === 0) {
                             if (index === 0) {
                                 row += `<td rowspan="${uniqueTimeSlots.length}" class="holiday-col" style="background: #FAF9FF; text-align: center; border-right: 1px solid #e2e8f0;">
                                     <div class="holiday-content" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
@@ -2196,8 +2365,7 @@
                             }
                             return;
                         }
-
-                        let daySlots = generateSlotsWithBreaks(d.dayKey);
+                        
                         let currentSlot = daySlots.find(s => s.time === time);
 
                         if (!currentSlot) {
@@ -2217,6 +2385,8 @@
                         const unavailability = appointment ? null : findUnavailabilityAt(dateAttr, time);
                         const blockedPeriod = appointment || unavailability ? null : findBlockedPeriodAt(dateAttr, time);
                         let blockId = unavailability ? unavailability.id : (blockedPeriod ? blockedPeriod.id : '');
+                        let blockStart = unavailability ? unavailability.start_datetime : (blockedPeriod ? blockedPeriod.start_datetime : '');
+                        let blockEnd = unavailability ? unavailability.end_datetime : (blockedPeriod ? blockedPeriod.end_datetime : '');
                         
                         const [yearVal, monthVal, dayVal] = dateAttr.split('-').map(Number);
                         const slot24Time = formatTimeSlotTo24(time); // Day view me yahan slotObj.time hoga
@@ -2229,7 +2399,7 @@
                         
 
                         if (unavailability || blockedPeriod) {
-                            row += `<td class="blocked-slot" data-date="${dateAttr}" data-slot="${time}" onclick="handleAppointmentAction(this, '${blockId}', { action: 'delete_unavailability' })" style="background-color: rgb(190, 190, 190); color: #000; cursor: pointer; text-align: center;">
+                            row += `<td class="blocked-slot" data-date="${dateAttr}" data-slot="${time}" onclick="handleAppointmentAction(this, '${blockId}', { action: 'delete_unavailability',start_datetime: '${blockStart}', end_datetime: '${blockEnd}' })" style="background-color: rgb(190, 190, 190); color: #000; cursor: pointer; text-align: center;">
                                 <i class="fa-solid fa-ban"></i> Unavailable
                             </td>`;
                         } else if (appointment) {
@@ -2246,6 +2416,7 @@
                 });
 
             } else if (currentView === 'day') {
+                diaryTable.addClass('day-view-active');
                 const dayKey = dayKeysMap[selectedDate.getDay()];
                 const dateAttr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
                 $('#date-range-display').text(`${monthNames[selectedDate.getMonth()]} ${selectedDate.getDate()}, ${selectedDate.getFullYear()}`);
@@ -2261,7 +2432,7 @@
                     </th>
                 </tr>`);
 
-                let daySlots = generateSlotsWithBreaks(dayKey);
+                let daySlots = generateSlotsWithBreaks(dateAttr, dayKey);
                 if (daySlots.length === 0) {
                     tbody.append(`<tr><td colspan="2" class="holiday-col" style="height: 400px; text-align: center; background: #FAF9FF;">
                         <div class="holiday-content" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
