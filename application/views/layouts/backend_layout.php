@@ -22,6 +22,7 @@
           href="<?= asset_url('assets/css/themes/' . setting('theme', 'default') . '.css') ?>">
     <link rel="stylesheet" type="text/css" href="<?= asset_url('assets/css/general.css') ?>">
     <link rel="stylesheet" type="text/css" href="<?= asset_url('assets/css/backend.css') ?>">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 
     <?php component('company_color_style', ['company_color' => setting('company_color')]); ?>
 
@@ -63,9 +64,28 @@
 <script src="<?= asset_url('assets/js/layouts/backend_layout.js') ?>"></script>
 <script src="<?= asset_url('assets/js/http/localization_http_client.js') ?>"></script>
 
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+
+
 <?php component('js_vars_script'); ?>
 <?php component('js_lang_script'); ?>
-
+<script>
+    $(document).ready(function() {
+        if ($('#dataTable').length && !$.fn.DataTable.isDataTable('#dataTable')) {
+            $('#dataTable').DataTable({
+                "order": [[0, "asc"]],
+                "pageLength": 10,
+                "language": {
+                    "search": "Search customers:",
+                    "lengthMenu": "Show _MENU_ entries",
+                    "info": "Showing _START_ to _END_ of _TOTAL_ entries"
+                }
+            });
+        }
+    });
+</script>
 <?php slot('scripts'); ?>
 
 </body>

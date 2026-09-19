@@ -5,7 +5,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <!-- DataTables Bootstrap 5 CSS -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<!--<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">-->
 
 
 <style>
@@ -250,20 +250,20 @@
 
 <?php section('scripts'); ?>
 <!-- DataTables JS & Bootstrap 5 Integration JS -->
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<!--<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>-->
+<!--<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>-->
 
-<script>
-    $(document).ready(function() {
-        $('#dataTable').DataTable({
-            "order": [[ 0, "asc" ]],
-            "pageLength": 10,
-            "language": {
-                "search": "Search logs:",
-                "lengthMenu": "Show _MENU_ entries per page",
-                "info": "Showing _START_ to _END_ of _TOTAL_ activity logs"
-            }
-        });
-    });
-</script>
+<!--<script>-->
+<!--    $(document).ready(function() {-->
+<!--        $('#dataTable').DataTable({-->
+<!--            "order": [[ 0, "asc" ]],-->
+<!--            "pageLength": 10,-->
+<!--            "language": {-->
+<!--                "search": "Search logs:",-->
+<!--                "lengthMenu": "Show _MENU_ entries per page",-->
+<!--                "info": "Showing _START_ to _END_ of _TOTAL_ activity logs"-->
+<!--            }-->
+<!--        });-->
+<!--    });-->
+<!--</script>-->
 <?php end_section('scripts'); ?>

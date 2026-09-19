@@ -674,7 +674,7 @@
         }
 
         .current-date-range {
-            font-size: 14px;
+            font-size: 12px;
             min-width: auto;
             padding: 0 4px;
             white-space: nowrap;
@@ -682,7 +682,7 @@
 
         .nav-btn {
             padding: 4px 8px;
-            font-size: 12px;
+            font-size: 10px;
         }
 
         .btn-icon-only {
@@ -704,6 +704,21 @@
         .legend-bar {
             padding: 8px 12px;
         }
+        
+        #new-appointment-btn{
+            padding: 7px;
+            font-size:14px;
+        }
+        
+        .diary-table th:first-child,
+    .diary-table td.time-cell {
+        width: 70px !important;
+        min-width: 70px !important;
+        max-width: 70px !important;
+        padding-left: 2px !important;
+        padding-right: 2px !important;
+        font-size: 12px !important;
+    }
     }
     
      /* --- DAY VIEW SPECIFIC OVERRIDES --- */
