@@ -209,6 +209,8 @@
                                 <th>Phone</th>
                                 <th>Assigned Provider</th>
                                 <th>Appointment Date & Time</th>
+                                 <th>Created By</th>    <!-- Created By Column -->
+                                <!--<th>Updated By</th> -->
                                 <th class="pe-3 text-center" style="width: 70px;">Action</th>
                             </tr>
                         </thead>
@@ -252,6 +254,38 @@
                                                 <span class="text-muted fst-italic">No Appointment</span>
                                             <?php endif; ?>
                                         </td>
+                                        
+                                        <td>
+                                            <?php 
+                                            if (!empty($row['created_by'])) {
+                                                if ((int)$row['created_by'] === (int)$row['id']) {
+                                                    echo '<span class="badge bg-info text-dark" style="font-size: 10px;">Patient (Online)</span>';
+                                                } elseif (!empty($row['creator_first_name'])) {
+                                                    echo html_escape($row['creator_first_name']);
+                                                } else {
+                                                    echo '<span class="text-muted">Staff ID: ' . $row['created_by'] . '</span>';
+                                                }
+                                                
+                                                  if (!empty($row['create_datetime'])) {
+                                                    echo '<div class="text-muted" style="font-size: 10px;">' . date('d M Y, h:i A', strtotime($row['create_datetime'])) . '</div>';
+                                                }
+                                            } else {
+                                                echo '<span class="text-muted fst-italic"></span>';
+                                            }
+                                            ?>
+                                        </td>
+
+                                        <!--<td>-->
+                                        <!--    <?php if (!empty($row['updated_by']) && !empty($row['updater_first_name'])): ?>-->
+                                        <!--        <div class="fw-semibold text-primary" style="font-size: 11px;"><?= html_escape($row['updater_first_name'] . ' ' . $row['updater_last_name']); ?></div>-->
+                                        <!--        <?php if (!empty($row['appointment_update_datetime'])): ?>-->
+                                        <!--            <div class="text-muted" style="font-size: 10px;"><?= date('d M Y, h:i A', strtotime($row['appointment_update_datetime'])); ?></div>-->
+                                        <!--        <?php endif; ?>-->
+                                        <!--    <?php else: ?>-->
+                                        <!--        <span class="text-muted fst-italic" style="font-size: 11px;">Not Updated</span>-->
+                                        <!--    <?php endif; ?>-->
+                                        <!--</td>-->
+                                        
                                         <td class="pe-3 text-center">
                                             <button type="button" class="btn btn-sm btn-light border text-primary px-2 py-1 edit-customer-btn" data-customer-id="<?= $row['id']; ?>" title="Edit Customer" style="font-size: 11px; border-radius: 4px;">
                                                 <i class="fa-solid fa-pen-to-square"></i>

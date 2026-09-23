@@ -106,8 +106,18 @@
                         <div style="width: 50px; height: 50px; background-color: #dcfce7; color: #16a34a; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto; font-size: 22px;">
                             <i class="fa-solid fa-check"></i>
                         </div>
-                        <h4 style="font-weight: 700; color: #0f172a; font-size: 20px; margin-bottom: 2px;">Appointment Booked!</h4>
-                        <p class="text-muted small mb-0">Dr. Sahu Clinic - Appointment Receipt</p>
+                        
+                        <!-- Choti aur saaf heading -->
+                        <h4 style="font-weight: 700; color: #0f172a; font-size: 20px; margin-bottom: 4px;">Appointment Request Received!</h4>
+                        <p class="text-muted small mb-3">Dr. Sahu Clinic - Appointment Receipt</p>
+                        
+                        <!-- Professional Info Alert Box -->
+                        <div style="background-color: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 12px 16px; border-radius: 12px; font-size: 13.5px; line-height: 1.5; text-align: left; margin-bottom: 16px; display: flex; gap: 10px; align-items: flex-start;">
+                            <i class="fa-solid fa-circle-info mt-1" style="font-size: 15px; flex-shrink: 0;"></i>
+                            <div>
+                                Your appointment request has been received! The doctor will confirm it shortly. You will receive a confirmation update via WhatsApp once it is approved.
+                            </div>
+                        </div>
                     </div>
 
                     <div class="card border-0 shadow-sm bg-light p-3 rounded-4 mb-3">

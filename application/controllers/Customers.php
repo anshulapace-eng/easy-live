@@ -39,7 +39,8 @@ class Customers extends EA_Controller
         'custom_field_4',
         'custom_field_5',
         'ldap_dn',
-        'created_by'
+        'created_by',
+        'updated_by'
     ];
 
     public array $optional_customer_fields = [
@@ -225,14 +226,21 @@ class Customers extends EA_Controller
             ea_appointments.end_datetime,
             ea_appointments.id_users_provider,
             ea_appointments.status as appointment_status,
+            ea_appointments.update_datetime as appointment_update_datetime,
             provider.first_name as provider_first_name,
             provider.last_name as provider_last_name,
-            ea_services.name as service_name
+            ea_services.name as service_name,
+            creator.first_name as creator_first_name,
+            creator.last_name as creator_last_name,
+            updater.first_name as updater_first_name,
+            updater.last_name as updater_last_name
         ');
         $this->db->from('ea_users');
         $this->db->join('ea_appointments', 'ea_appointments.id_users_customer = ea_users.id', 'left');
         $this->db->join('ea_users as provider', 'provider.id = ea_appointments.id_users_provider', 'left');
         $this->db->join('ea_services', 'ea_services.id = ea_appointments.id_services', 'left');
+        $this->db->join('ea_users as creator', 'creator.id = ea_users.created_by', 'left');
+        $this->db->join('ea_users as updater', 'updater.id = ea_appointments.updated_by', 'left');
 
         $this->db->where('ea_users.id_roles', 3);
         if ($role_slug === DB_SLUG_PROVIDER) {
@@ -683,7 +691,8 @@ $customer['created_by'] = session('user_id');
         $customer_data = [
             'first_name'   => $patient_name,
             'last_name'    => $contact_name,
-            'phone_number' => $phone_number
+            'phone_number' => $phone_number,
+            'updated_by' => session('user_id')
         ];
 
         $target_customer_id = !empty($post_customer_id) ? $post_customer_id : $customer_id;
@@ -726,6 +735,7 @@ $customer['created_by'] = session('user_id');
                     'end_datetime'      => $end_datetime,
                     'status'            => $status,
                     'appointment_type'  => $appointment_type,
+                    'updated_by' => session('user_id'),
                     'is_unavailability' => 0
                 ]);
 

@@ -218,6 +218,10 @@ class Home extends EA_Controller
         if (empty($customer_id)) {
             throw new RuntimeException('Could not process customer data.');
         }
+        
+         if($customer_id){
+            $this->db->where('id', $customer_id)->update('ea_users', ['created_by' => $customer_id]);
+        }
 
         $start_datetime = $appointment_date . ' ' . $appointment_time . ':00';
         $end_datetime   = date('Y-m-d H:i:s', strtotime('+15 minutes', strtotime($start_datetime)));
@@ -241,7 +245,8 @@ class Home extends EA_Controller
             'id_services'       => $service_id,
             'notes'             => $note,
             'status'            => 'Booked',
-            'appointment_type'  => $appointment_type // Add to array for DB Insert
+            'appointment_type'  => $appointment_type,
+            'created_by'        => $customer_id
         ];
 
         $appointment_id = $this->appointments_model->save($appointment_data);

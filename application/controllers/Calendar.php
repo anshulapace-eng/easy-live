@@ -38,6 +38,7 @@ class Calendar extends EA_Controller
         'custom_field_3',
         'custom_field_4',
         'custom_field_5',
+        'created_by',
     ];
 
     public array $optional_customer_fields = [
@@ -58,6 +59,7 @@ class Calendar extends EA_Controller
         'id_users_provider',
         'id_users_customer',
         'id_services',
+        'created_by',
     ];
 
     public array $optional_appointment_fields = [
@@ -288,6 +290,9 @@ class Calendar extends EA_Controller
             // Save customer changes to the database.
             if ($customer_data) {
                 $customer = $customer_data;
+                if (empty($customer['id'])) {
+                    $customer['created_by'] = session('user_id');
+                }
 
                 $required_permissions = !empty($customer['id'])
                     ? can('add', PRIV_CUSTOMERS)
@@ -314,6 +319,9 @@ class Calendar extends EA_Controller
 
             if ($appointment_data) {
                 $appointment = $appointment_data;
+                if (empty($appointment['id'])) {
+                        $appointment['created_by'] = session('user_id');
+                    }
 
                 $required_permissions = !empty($appointment['id'])
                     ? can('add', PRIV_APPOINTMENTS)
@@ -755,6 +763,34 @@ class Calendar extends EA_Controller
                 $appointment['provider'] = $this->providers_model->find($appointment['id_users_provider']);
                 $appointment['service'] = $this->services_model->find($appointment['id_services']);
                 $appointment['customer'] = $this->customers_model->find($appointment['id_users_customer']);
+                
+                $total_bookings = $this->db
+                ->where('id_users_customer', $appointment['id_users_customer'])
+                ->where('is_canceled', 0)
+                ->count_all_results('appointments');
+                $appointment['patient_type'] = ($total_bookings > 1) ? 'Old' : 'New';
+                
+                if (!empty($appointment['created_by'])) {
+                    if ($appointment['created_by'] == $appointment['id_users_customer']) {
+                        $appointment['creator_name'] = 'Customer';
+                        $appointment['creator_role'] = 'Self Booked';
+                    } else {
+                        $creator = $this->db
+                            ->select('ea_users.first_name, ea_users.last_name, ea_roles.name AS role_name')
+                            ->from('ea_users')
+                            ->join('ea_roles', 'ea_roles.id = ea_users.id_roles', 'left')
+                            ->where('ea_users.id', $appointment['created_by'])
+                            ->get()
+                            ->row_array();
+                            
+                        $appointment['creator_name'] = $creator ? trim($creator['first_name']) : 'Unknown';
+                        $appointment['creator_role'] = $creator['role_name'] ?? 'Staff';
+                    }
+                } else {
+                    $provider_fname = $appointment['provider']['first_name'] ?? '';
+                    $appointment['creator_name'] = trim($provider_fname);
+                    $appointment['creator_role'] = 'Provider';
+                }
             }
 
             unset($appointment);
@@ -1247,6 +1283,14 @@ class Calendar extends EA_Controller
             'start_datetime' => $start_datetime,
             'end_datetime'   => $end_datetime
         ];
+        
+        if ($this->input->post('status')) {
+            $update_data['status'] = $this->input->post('status');
+        }
+
+        if ($this->input->post('is_whatsapp_sent') !== null) {
+            $update_data['is_whatsapp_sent'] = $this->input->post('is_whatsapp_sent');
+        }
 
         // 5. Database mein update karein
         $updated = $this->db->where('id', $appointment_id)->update('appointments', $update_data);

@@ -912,6 +912,76 @@
         display: none;
     }
     
+}
+
+/* --- SUDARSHAN CHAKRA & BLINKING EFFECT (FIXED CLIPPING) --- */
+    
+    @keyframes spinChakra {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    @keyframes blinkPulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.6; transform: scale(0.95); }
+    }
+
+    /* Wrapper ki exact size set ki aur negative values hata di */
+    .chakra-badge-wrapper {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 8px;
+        vertical-align: middle;
+        width: 32px; 
+        height: 32px; 
+        animation: blinkPulse 1.2s infinite ease-in-out; 
+    }
+
+    /* Dashed border ab negative values nahi lega, parent ke exact andar fit rahega */
+    .chakra-badge-wrapper::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0; 
+        border-radius: 50%;
+        border: 2px dashed; /* Border width thodi kam ki taaki clean dikhe */
+        animation: spinChakra 3s linear infinite; 
+    }
+
+    /* 'New' Patient Chakra Colors */
+    .chakra-badge-wrapper.new::before {
+        border-color: #3b82f6; 
+    }
+    .chakra-badge-text.new {
+        background-color: #dbeafe;
+        color: #1e40af;
+    }
+
+    /* 'Old' Patient Chakra Colors */
+    .chakra-badge-wrapper.old::before {
+        border-color: #94a3b8; 
+    }
+    .chakra-badge-text.old {
+        background-color: #f1f5f9;
+        color: #475569;
+    }
+
+    /* Andar ka text background */
+    .chakra-badge-text {
+        width: 24px; /* Border se thoda chhota taaki chipke nahi */
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 8px; /* Perfect fit ke liye font size 8px */
+        font-weight: 800;
+        text-transform: uppercase;
+        z-index: 2;
+        letter-spacing: 0px;
+    }
+    
    
 </style>
 
@@ -1154,11 +1224,26 @@
             <div class="modal-body" style="padding: 4px 14px 12px 14px;">
 
                 <!-- Avatar & Name -->
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <!--<div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">-->
+                <!--    <div style="width: 40px; height: 40px; background: #ede9fe; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #7c3aed; font-weight: 700; font-size: 14px; flex-shrink: 0;" class="customer-avatar">SM</div>-->
+                <!--    <div style="overflow: hidden; flex: 1;">-->
+                <!--        <h6 style="margin: 0; font-size: 14px; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" class="customer-name">Sophia Martin</h6>-->
+                <!--        <span style="display: inline-block; margin-top: 2px; padding: 1px 6px; background: #e6f4ea; color: #137333; border-radius: 8px; font-size: 9px; font-weight: 600;" class="appointment-status">Confirmed</span>-->
+                <!--    </div>-->
+                <!--</div>-->
+                
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+
                     <div style="width: 40px; height: 40px; background: #ede9fe; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #7c3aed; font-weight: 700; font-size: 14px; flex-shrink: 0;" class="customer-avatar">SM</div>
-                    <div style="overflow: hidden; flex: 1;">
-                        <h6 style="margin: 0; font-size: 14px; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" class="customer-name">Sophia Martin</h6>
-                        <span style="display: inline-block; margin-top: 2px; padding: 1px 6px; background: #e6f4ea; color: #137333; border-radius: 8px; font-size: 9px; font-weight: 600;" class="appointment-status">Confirmed</span>
+
+                    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; justify-content: center;">
+                     
+                        <div style="display: flex; align-items: center; gap: 8px; max-width: 100%;">
+                            <h6 style="margin: 0; font-size: 14px; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" class="customer-name">Sophia Martin</h6>
+                            <div class="patient-badge-container" style="flex-shrink: 0; display: flex; align-items: center;"></div>
+                        </div>
+                        <span style="display: inline-block; margin-top: 4px; padding: 2px 8px; background: #e6f4ea; color: #137333; border-radius: 12px; font-size: 10px; font-weight: 600;" class="appointment-status">Confirmed</span>
+
                     </div>
                 </div>
 
@@ -2082,7 +2167,16 @@ $(document).on('click', '#scroll-right-btn', function() {
             const $modal = $('#appointment-details-modal');
 
             $modal.find('.customer-avatar').text(customerInitials);
+            let patientType = appointment.patient_type || 'New';
+            let badgeClass = patientType.toLowerCase();
+
+            let badgeHtml = `
+                <span class="chakra-badge-wrapper ${badgeClass}" style="margin-left: 0;">
+                    <span class="chakra-badge-text ${badgeClass}">${patientType}</span>
+                </span>
+            `;
             $modal.find('.customer-name').text(customerName);
+            $modal.find('.patient-badge-container').html(badgeHtml);
             $modal.find('#cancelid').val(appointment.id);
             $modal.find('#modal-start-datetime').val(appointment.start_datetime);
             $modal.find('#modal-end-datetime').val(appointment.end_datetime);
@@ -2124,7 +2218,11 @@ $(document).on('click', '#scroll-right-btn', function() {
             $modal.find('.appointment-time').html(`${formattedStartTime} - ${formattedEndTime} <span style="color: #94a3b8;">(${duration} min)</span>`);
             $modal.find('.appointment-location').text(location);
             $modal.find('.booked-on').text(bookedOn);
-            $modal.find('.booked-by').html(`${providerName}<br><span style="font-size: 12px; color: #64748b;">(Provider)</span>`);
+            // $modal.find('.booked-by').html(`${providerName}<br><span style="font-size: 12px; color: #64748b;">(Provider)</span>`);
+            const bookedByName = appointment.creator_name ? appointment.creator_name : providerName;
+            const bookedByRole = appointment.creator_role ? appointment.creator_role : 'Provider';
+
+            $modal.find('.booked-by').html(`${bookedByName}<span style="font-size: 11px; color: #64748b;">(${bookedByRole})</span>`);
             let visibleMessage = `Your Appointment with Dr. Monashis Sahu (Endocrinologist) has been scheduled for :<br>
             <b>Date:</b> ${formattedStartDate}
             <b>Time:</b> ${formattedStartTime} <span style="color: #94a3b8;">...</span>`;
@@ -2555,6 +2653,12 @@ $(document).on('click', '#scroll-right-btn', function() {
             if (isVideoAppointment) {
                 customStyle = 'background-color: #F8EEF5;';
             }
+            
+            const isSelfBooked = data.created_by && Number(data.created_by) === Number(data.id_users_customer);
+            if (isSelfBooked && !isCanceled) {
+                // Online booking ke liye ek alag aakarshak background color (jaise halka orange/peach ya custom blue tint)
+                customStyle = 'background-color: #ecfdf5; border-left: 3px solid #f43f5e;';
+            }
 
             let rightIcons = '';
             if (data.check_type !== null && data.check_type !== undefined && data.check_type !== "") {
@@ -2646,6 +2750,10 @@ $(document).on('click', '#scroll-right-btn', function() {
         function processDragDropReschedule(appointmentId, newDate, newTimeStr) {
             let appointment = getAppointmentById(appointmentId);
             if(!appointment) return;
+            
+            let isWhatsappSent = Number(appointment.is_whatsapp_sent) === 1;
+            let currentStatus = appointment.status ? appointment.status.toLowerCase() : '';
+            let isConfirmed = ['confirm', 'confirmed'].includes(currentStatus);
 
             let formatted24Time = formatTimeSlotTo24(newTimeStr);
             
@@ -2664,16 +2772,30 @@ $(document).on('click', '#scroll-right-btn', function() {
             let newStartDatetime = `${newStartObj.getFullYear()}-${pad(newStartObj.getMonth()+1)}-${pad(newStartObj.getDate())} ${pad(newStartObj.getHours())}:${pad(newStartObj.getMinutes())}:00`;
             let newEndDatetime = `${newEndObj.getFullYear()}-${pad(newEndObj.getMonth()+1)}-${pad(newEndObj.getDate())} ${pad(newEndObj.getHours())}:${pad(newEndObj.getMinutes())}:00`;
 
+            let postData = {
+                appointment_id: appointmentId,
+                start_datetime: newStartDatetime,
+                end_datetime: newEndDatetime,
+                csrf_token: vars('csrf_token')
+            };
+            
+            let togglesReset = false;
+            
+            if (isWhatsappSent) {
+                postData.is_whatsapp_sent = 0; 
+                togglesReset = true;
+            }
+            
+            if (isConfirmed) {
+                postData.status = 'booked';
+                togglesReset = true;
+            }
+            
             $.ajax({
                 url: "<?= site_url('calendar/reschedule_appointment_drag_drop') ?>",
                 type: "POST",
                 dataType: "json",
-                data: {
-                    appointment_id: appointmentId,
-                    start_datetime: newStartDatetime,
-                    end_datetime: newEndDatetime,
-                    csrf_token: vars('csrf_token')
-                },
+                data: postData,
                 success: function(response) {
                     if (response.success) {
                         showToast("Appointment Rescheduled Successfully!");

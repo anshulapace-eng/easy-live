@@ -27,6 +27,7 @@ class Appointments_model extends EA_Model
         'id_users_provider' => 'integer',
         'id_users_customer' => 'integer',
         'id_services' => 'integer',
+        'created_by' => 'integer',
     ];
 
     /**
@@ -47,6 +48,7 @@ class Appointments_model extends EA_Model
         'serviceId' => 'id_services',
         'providerId' => 'id_users_provider',
         'customerId' => 'id_users_customer',
+        'createdBy' => 'created_by',
         'googleCalendarId' => 'id_google_calendar',
         'caldavCalendarId' => 'id_caldav_calendar',
     ];
