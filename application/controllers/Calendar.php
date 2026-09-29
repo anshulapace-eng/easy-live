@@ -261,6 +261,70 @@ class Calendar extends EA_Controller
         $this->load->view('pages/calendar');
     }
 
+    /**
+     * Return national festival dates for calendar planning without blocking bookings.
+     */
+    public function national_holidays(int $year): void
+    {
+        method('get');
+
+        if (cannot('view', PRIV_APPOINTMENTS)) {
+            abort(403, 'Forbidden');
+            return;
+        }
+
+        if ($year < 2020 || $year > 2100) {
+            json_response(['holidays' => []], 400);
+            return;
+        }
+
+        $cache_key = 'national-holidays-' . $year;
+        $cached_holidays = $this->cache->get($cache_key);
+
+        if ($cached_holidays !== false) {
+            json_response(['holidays' => $cached_holidays]);
+            return;
+        }
+
+        try {
+            $client = new \GuzzleHttp\Client([
+                'connect_timeout' => 3,
+                'timeout' => 10,
+            ]);
+            $response = $client->get(
+                'https://calendar.google.com/calendar/ical/en.indian%23holiday%40group.v.calendar.google.com/public/basic.ics',
+            );
+            $calendar = \Sabre\VObject\Reader::read($response->getBody()->getContents());
+            $holidays = [];
+
+            foreach ($calendar->VEVENT as $event) {
+                if (!$event instanceof \Sabre\VObject\Component) {
+                    continue;
+                }
+
+                $start_date = $event->select('DTSTART')[0] ?? null;
+                $summary = $event->select('SUMMARY')[0] ?? null;
+                $date_value = $start_date ? (string) $start_date : '';
+
+                if (preg_match('/^(\d{4})(\d{2})(\d{2})$/', $date_value, $matches) && (int) $matches[1] === $year) {
+                    $date = $matches[1] . '-' . $matches[2] . '-' . $matches[3];
+                    $holidays[$date] = [
+                        'date' => $date,
+                        'name' => $summary ? (string) $summary : '',
+                    ];
+                }
+            }
+
+            $holidays = array_values($holidays);
+            $this->cache->save($cache_key, $holidays, 604800);
+
+            json_response(['holidays' => $holidays]);
+        } catch (Throwable $exception) {
+            log_message('error', 'Failed to load national festival dates: ' . $exception->getMessage());
+            json_response(['holidays' => []], 502);
+        }
+    }
+
 
     /**
      * Save appointment changes that are made from the backend calendar page.

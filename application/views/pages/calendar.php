@@ -198,9 +198,6 @@
         text-align: center;
         font-size: 11px;
         margin-bottom: 16px;
-    }
-
-    .mini-cal-day-head {
         color: #000000;
         font-weight: 700;
         padding: 2px 0;
@@ -220,6 +217,34 @@
         background: #5A3FEE;
         color: white;
         font-weight: 700;
+    }
+
+    .mini-cal-date {
+        position: relative;
+    }
+
+    .mini-cal-date.has-festival::after {
+        content: '';
+        position: absolute;
+        bottom: 1px;
+        left: 50%;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: #d97706;
+        transform: translateX(-50%);
+    }
+
+    .mini-cal-date.active.has-festival::after {
+        background: #ffffff;
+    }
+
+    .festival-day-label {
+        display: block;
+        margin-top: 3px;
+        color: #a16207;
+        font-size: 10px;
+        font-weight: 600;
     }
 
     .mini-cal-date.other-month {
@@ -993,6 +1018,7 @@
         <div class="legend-item"><i class="fa-solid fa-ban legend-icon" style="color: #64748b;"></i> Blocked by office (Unavailable)</div>
         <div class="legend-item"><i class="fa-regular fa-square legend-icon" style="color: #cbd5e1;"></i> Vacant Slot (Available)</div>
         <div class="legend-item"><i class="fa-solid fa-star legend-icon" style="color: #f59e0b;"></i> Old booking > 2 weeks</div>
+        <div class="legend-item"><i class="fa-solid fa-flag" style="color: #d97706;"></i> Indian holiday / observance (planning cue; bookings stay open)</div>
     </div>
 
     <!-- Main Body -->
@@ -1766,6 +1792,9 @@ $(document).on('click', '#scroll-right-btn', function() {
         let unavailabilitiesData = [];
         let blockedPeriodsData = [];
         let workingPlanExceptions = [];
+        const nationalHolidayCache = new Map();
+        const nationalHolidayRequests = new Set();
+        const loadedNationalHolidayYears = new Set();
 
         let workingPlan = {};
         try {
@@ -1779,8 +1808,44 @@ $(document).on('click', '#scroll-right-btn', function() {
         const dayKeysMap = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
         const dayNamesShort = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+        function escapeHtml(value) {
+            return String(value).replace(/[&<>"']/g, (character) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            })[character]);
+        }
+
+        function loadNationalHolidays(year) {
+            if (loadedNationalHolidayYears.has(year) || nationalHolidayRequests.has(year)) {
+                return;
+            }
+
+            nationalHolidayRequests.add(year);
+            fetch(`<?= site_url('calendar/national_holidays') ?>/${year}`)
+                .then((response) => response.ok ? response.json() : { holidays: [] })
+                .then((payload) => {
+                    (payload.holidays || []).forEach((holiday) => nationalHolidayCache.set(holiday.date, holiday));
+                })
+                .catch(() => {})
+                .finally(() => {
+                    nationalHolidayRequests.delete(year);
+                    loadedNationalHolidayYears.add(year);
+                    if (typeof window.renderCalendar === 'function') {
+                        window.renderCalendar();
+                    }
+                });
+        }
+
+        function nationalHolidayForDate(date) {
+            loadNationalHolidays(Number(date.slice(0, 4)));
+            return nationalHolidayCache.get(date);
+        }
+
         const dayColors = {
-            0: '#9333ea',
+            0: '#645770',
             1: '#2563eb',
             2: '#16a34a',
             3: '#f97316',
@@ -2286,7 +2351,11 @@ $(document).on('click', '#scroll-right-btn', function() {
             }
             for (let i = 1; i <= totalDays; i++) {
                 const isToday = i === selectedDate.getDate() && month === selectedDate.getMonth() && year === selectedDate.getFullYear();
-                grid.append(`<div class="mini-cal-date ${isToday ? 'active' : ''}" data-day="${i}">${i}</div>`);
+                const dateAttr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                const holiday = nationalHolidayForDate(dateAttr);
+                const holidayClass = holiday ? 'has-festival' : '';
+                const holidayTitle = holiday ? ` title="${escapeHtml(holiday.name)}"` : '';
+                grid.append(`<div class="mini-cal-date ${isToday ? 'active' : ''} ${holidayClass}" data-day="${i}"${holidayTitle}>${i}</div>`);
             }
         }
 
@@ -2309,9 +2378,13 @@ $(document).on('click', '#scroll-right-btn', function() {
 
                 weekDays.forEach((d) => {
                     const dayColor = dayColors[d.dayIndex] || '#334155';
+                    const dateAttr = `${d.dateObj.getFullYear()}-${String(d.dateObj.getMonth() + 1).padStart(2, '0')}-${String(d.dateObj.getDate()).padStart(2, '0')}`;
+                    const holiday = nationalHolidayForDate(dateAttr);
+                    const holidayLabel = holiday ? `<span class="festival-day-label">${escapeHtml(holiday.name)}</span>` : '';
                     headRow += `<th style="text-align: center; background: #F4F5F8; padding: 10px 4px; border-bottom: 1px solid #e2e8f0;">
                         <div class="th-day-name" style="font-size: 14px; font-weight: 700; color: ${dayColor}; text-transform: none;">${d.name}</div>
                         <div class="th-day-date" style="font-size: 13px; font-weight: 600; color: ${dayColor}; margin-top: 2px; text-transform: none;">${d.dateStr}</div>
+                        ${holidayLabel}
                     </th>`;
                 });
                 headRow += `</tr>`;
@@ -2423,12 +2496,15 @@ $(document).on('click', '#scroll-right-btn', function() {
 
                 const currentDayIndex = selectedDate.getDay();
                 const dayColor = dayColors[currentDayIndex] || '#334155';
+                const holiday = nationalHolidayForDate(dateAttr);
+                const holidayLabel = holiday ? `<span class="festival-day-label">${escapeHtml(holiday.name)} · planning only</span>` : '';
 
                 thead.append(`<tr>
                     <th style="width: 80px; text-align: center; background:  #F9F9FA !important; color: #000 !important;  border-bottom: 1px solid #e2e8f0; vertical-align: middle; font-weight: 700;">Time</th>
                     <th style="text-align: center; background: #F4F5F8; padding: 12px 0; border-bottom: 1px solid #e2e8f0;">
                         <div class="th-day-name" style="font-size: 16px; font-weight: 700; color: ${dayColor}; text-transform: none;">${dayNamesShort[currentDayIndex]}</div>
                         <div class="th-day-date" style="font-size: 15px; font-weight: 600; color: ${dayColor}; margin-top: 4px; text-transform: none;">${shortMonthNames[selectedDate.getMonth()]} ${selectedDate.getDate()}</div>
+                        ${holidayLabel}
                     </th>
                 </tr>`);
 
