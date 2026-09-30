@@ -534,6 +534,49 @@
         margin-bottom: 8px;
         color: #64748b;
     }
+    
+     .festival-day-header {
+        height: auto !important;
+        min-height: 54px;
+        white-space: normal !important;
+    }
+
+    .festival-day-name {
+        margin-top: 2px;
+        color: #9a3412;
+        font-size: 10px;
+        font-weight: 700;
+        line-height: 1.2;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .mini-cal-date.festival-day {
+        position: relative;
+        color: #9a3412;
+        background: #ffedd5;
+    }
+
+    .mini-cal-date.festival-day::after {
+        content: '';
+        position: absolute;
+        bottom: 1px;
+        left: 50%;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: #ea580c;
+        transform: translateX(-50%);
+    }
+
+    .mini-cal-date.active.festival-day {
+        color: #ffffff;
+        background: #c2410c;
+    }
+
+    .mini-cal-date.active.festival-day::after {
+        background: #ffffff;
+    }
 
     .custom-toast {
         position: fixed;
@@ -1078,6 +1121,8 @@
         <div class="legend-item"><i class="fa-solid fa-ban legend-icon" style="color: #64748b;"></i> Blocked by office (Unavailable)</div>
         <div class="legend-item"><i class="fa-regular fa-square legend-icon" style="color: #cbd5e1;"></i> Vacant Slot (Available)</div>
         <div class="legend-item"><i class="fa-solid fa-star legend-icon" style="color: #f59e0b;"></i> Old booking > 2 weeks</div>
+        <div class="legend-item"><i class="fa-solid fa-star" style="color: #ea580c;"></i> Festival / high-demand day</div>
+
     </div>
 
     <!-- Main Body -->
@@ -1878,6 +1923,85 @@ $(document).on('click', '#scroll-right-btn', function() {
         const shortMonthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         const dayKeysMap = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
         const dayNamesShort = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        
+        const festivalDates = {};
+        const festivalStorageKey = 'easyappointments-indian-festival-dates';
+        let festivalRequest = null;
+        let festivalDataVersion = 0;
+        let calendarDataLoaded = false;
+
+        function formatDateKey(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+
+            return `${year}-${month}-${day}`;
+        }
+
+        function escapeHtml(value) {
+            return String(value).replace(/[&<>"']/g, (character) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            })[character]);
+        }
+
+        function loadFestivalDates() {
+            if (!festivalRequest) {
+                try {
+                    const cached = JSON.parse(window.localStorage.getItem(festivalStorageKey) || 'null');
+                    if (cached && cached.expiresAt > Date.now() && Array.isArray(cached.holidays) && cached.holidays.length > 0) {
+                        cached.holidays.forEach((holiday) => {
+                            if (holiday.date && holiday.name) {
+                                festivalDates[holiday.date] = holiday.name;
+                            }
+                        });
+                        festivalDataVersion++;
+                        return $.Deferred().resolve().promise();
+                    }
+                } catch (error) {
+                    // Ignore malformed or unavailable browser storage.
+                }
+
+                festivalRequest = $.ajax({
+                    url: "<?= site_url('calendar/get_indian_festival_holidays'); ?>",
+                    dataType: 'json',
+                    timeout: 25000
+                }).done((holidays) => {
+                    const validHolidays = Array.isArray(holidays) ? holidays.filter((holiday) => holiday.date && holiday.name) : [];
+                    validHolidays.forEach((holiday) => {
+                        if (holiday.date && holiday.name) {
+                            festivalDates[holiday.date] = holiday.name;
+                        }
+                    });
+
+                    if (validHolidays.length === 0) {
+                        festivalRequest = null;
+                        return;
+                    }
+
+                    festivalDataVersion++;
+                    try {
+                        window.localStorage.setItem(festivalStorageKey, JSON.stringify({
+                            expiresAt: Date.now() + 86400000,
+                            holidays: validHolidays
+                        }));
+                    } catch (error) {
+                        // Calendar markers still work when browser storage is unavailable.
+                    }
+                }).fail(() => {
+                    festivalRequest = null;
+                });
+            }
+
+            return festivalRequest;
+        }
+
+        function festivalNameForDate(date) {
+            return festivalDates[date] || '';
+        }
 
         const dayColors = {
             0: '#9333ea',
@@ -1930,11 +2054,18 @@ $(document).on('click', '#scroll-right-btn', function() {
                 startDate,
                 endDate
             } = getCalendarDateRange();
+            const festivalVersionBeforeRequest = festivalDataVersion;
+            loadFestivalDates().done(() => {
+                if (calendarDataLoaded && festivalDataVersion !== festivalVersionBeforeRequest) {
+                    window.renderCalendar();
+                }
+            });
             return App.Http.Calendar.getCalendarAppointmentsForTableView(startDate, endDate).done((response) => {
                 appointmentsData = response.appointments || [];
                 unavailabilitiesData = response.unavailabilities || [];
                 blockedPeriodsData = response.blocked_periods || [];
                 workingPlanExceptions = response.working_plan_exceptions || [];
+                 calendarDataLoaded = true;
             });
         }
 
@@ -2397,9 +2528,13 @@ $(document).on('click', '#scroll-right-btn', function() {
             for (let x = firstDayIndex; x > 0; x--) {
                 grid.append(`<div class="mini-cal-date other-month">${prevMonthLastDate - x + 1}</div>`);
             }
-            for (let i = 1; i <= totalDays; i++) {
+           for (let i = 1; i <= totalDays; i++) {
                 const isToday = i === selectedDate.getDate() && month === selectedDate.getMonth() && year === selectedDate.getFullYear();
-                grid.append(`<div class="mini-cal-date ${isToday ? 'active' : ''}" data-day="${i}">${i}</div>`);
+                const dateKey = formatDateKey(new Date(year, month, i));
+                const festivalName = festivalNameForDate(dateKey);
+                const festivalClass = festivalName ? 'festival-day' : '';
+                const title = festivalName ? ` title="${escapeHtml(festivalName)}"` : '';
+                grid.append(`<div class="mini-cal-date ${isToday ? 'active' : ''} ${festivalClass}" data-day="${i}"${title}>${i}</div>`);
             }
         }
 
@@ -2422,9 +2557,14 @@ $(document).on('click', '#scroll-right-btn', function() {
 
                 weekDays.forEach((d) => {
                     const dayColor = dayColors[d.dayIndex] || '#334155';
-                    headRow += `<th style="text-align: center; background: #F4F5F8; padding: 10px 4px; border-bottom: 1px solid #e2e8f0;">
+                     const dateKey = formatDateKey(d.dateObj);
+                    const festivalName = festivalNameForDate(dateKey);
+                    const festivalClass = festivalName ? 'festival-day-header' : '';
+                    const festivalMarkup = festivalName ? `<div class="festival-day-name" title="${escapeHtml(festivalName)}"><i class="fa-solid fa-star"></i> ${escapeHtml(festivalName)}</div>` : '';
+                    headRow += `<th class="${festivalClass}" style="text-align: center; background: #F4F5F8; padding: 10px 4px; border-bottom: 1px solid #e2e8f0;">
                         <div class="th-day-name" style="font-size: 14px; font-weight: 700; color: ${dayColor}; text-transform: none;">${d.name}</div>
                         <div class="th-day-date" style="font-size: 13px; font-weight: 600; color: ${dayColor}; margin-top: 2px; text-transform: none;">${d.dateStr}</div>
+                         ${festivalMarkup}
                     </th>`;
                 });
                 headRow += `</tr>`;
@@ -2536,12 +2676,17 @@ $(document).on('click', '#scroll-right-btn', function() {
 
                 const currentDayIndex = selectedDate.getDay();
                 const dayColor = dayColors[currentDayIndex] || '#334155';
+                
+                 const festivalName = festivalNameForDate(dateAttr);
+                const festivalClass = festivalName ? 'festival-day-header' : '';
+                const festivalMarkup = festivalName ? `<div class="festival-day-name"><i class="fa-solid fa-star"></i> ${escapeHtml(festivalName)}</div>` : '';
 
                 thead.append(`<tr>
                     <th style="width: 80px; text-align: center; background:  #F9F9FA !important; color: #000 !important;  border-bottom: 1px solid #e2e8f0; vertical-align: middle; font-weight: 700;">Time</th>
-                    <th style="text-align: center; background: #F4F5F8; padding: 12px 0; border-bottom: 1px solid #e2e8f0;">
+                    <th class="${festivalClass}" style="text-align: center; background: #F4F5F8; padding: 12px 0; border-bottom: 1px solid #e2e8f0;">
                         <div class="th-day-name" style="font-size: 16px; font-weight: 700; color: ${dayColor}; text-transform: none;">${dayNamesShort[currentDayIndex]}</div>
                         <div class="th-day-date" style="font-size: 15px; font-weight: 600; color: ${dayColor}; margin-top: 4px; text-transform: none;">${shortMonthNames[selectedDate.getMonth()]} ${selectedDate.getDate()}</div>
+                        ${festivalMarkup}
                     </th>
                 </tr>`);
 

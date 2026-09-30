@@ -1,5 +1,9 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed');
 
+use GuzzleHttp\Client;
+use Sabre\VObject\Component\VEvent;
+use Sabre\VObject\Reader;
+
 /* ----------------------------------------------------------------------------
  * Easy!Appointments - Online Appointment Scheduler
  *
@@ -213,6 +217,7 @@ class Calendar extends EA_Controller
                 }),
             );
         }
+        
 
         script_vars([
             'user_id' => $user_id,
@@ -262,6 +267,8 @@ class Calendar extends EA_Controller
 
         $this->load->view('pages/calendar');
     }
+    
+
 
 
     /**
@@ -715,6 +722,79 @@ class Calendar extends EA_Controller
             ]);
         } catch (Throwable $e) {
             json_exception($e);
+        }
+    }
+    
+     public function get_indian_festival_holidays(): void
+    {
+        method('get');
+
+        if (!can('view', PRIV_APPOINTMENTS)) {
+            abort(403, 'Forbidden');
+        }
+
+        try {
+            $cache_directory = rtrim((string) $this->config->item('cache_path'), '/\\');
+            $cache_file = $cache_directory . DIRECTORY_SEPARATOR . 'indian-festival-holidays.json';
+            $holidays = null;
+
+            if (is_file($cache_file) && filemtime($cache_file) >= time() - 86400) {
+                $cached_holidays = json_decode((string) @file_get_contents($cache_file), true);
+
+                if (is_array($cached_holidays) && !empty($cached_holidays)) {
+                    $holidays = $cached_holidays;
+                }
+            }
+
+            if ($holidays === null) {
+                $client = new Client([
+                    'connect_timeout' => 10,
+                    'timeout' => 20,
+                ]);
+
+                $response = $client->get(
+                    'https://calendar.google.com/calendar/ical/en.indian%23holiday%40group.v.calendar.google.com/public/basic.ics',
+                );
+
+                $calendar = Reader::read((string) $response->getBody());
+                $holidays = [];
+
+                foreach ($calendar->VEVENT as $event) {
+                    /** @var VEvent $event */
+                    $start_dates = $event->select('DTSTART');
+                    $summaries = $event->select('SUMMARY');
+
+                    if (empty($start_dates) || empty($summaries)) {
+                        continue;
+                    }
+
+                    $name = trim($summaries[0]->getValue());
+
+                    if ($name === '') {
+                        continue;
+                    }
+
+                    $holidays[] = [
+                        'date' => $start_dates[0]->getDateTime()->format('Y-m-d'),
+                        'name' => $name,
+                    ];
+                }
+
+                usort($holidays, static fn (array $first, array $second): int => strcmp($first['date'], $second['date']));
+
+                if (!empty($holidays) && is_dir($cache_directory) && is_writable($cache_directory)) {
+                    $encoded_holidays = json_encode($holidays, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+                    if ($encoded_holidays !== false) {
+                        @file_put_contents($cache_file, $encoded_holidays, LOCK_EX);
+                    }
+                }
+            }
+
+            json_response($holidays);
+        } catch (Throwable $e) {
+            log_message('error', 'Failed to load the Indian festival calendar: ' . $e->getMessage());
+            json_response([]);
         }
     }
 
