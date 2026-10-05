@@ -49,7 +49,7 @@ class Calendar extends EA_Controller
         //
     ];
 
-    public array $allowed_appointment_fields = [
+     public array $allowed_appointment_fields = [
         'id',
         'start_datetime',
         'end_datetime',
@@ -63,6 +63,7 @@ class Calendar extends EA_Controller
         'id_users_provider',
         'id_users_customer',
         'id_services',
+        'patient_type',
         'created_by',
     ];
 
@@ -844,11 +845,11 @@ class Calendar extends EA_Controller
                 $appointment['service'] = $this->services_model->find($appointment['id_services']);
                 $appointment['customer'] = $this->customers_model->find($appointment['id_users_customer']);
                 
-                $total_bookings = $this->db
-                ->where('id_users_customer', $appointment['id_users_customer'])
-                ->where('is_canceled', 0)
-                ->count_all_results('appointments');
-                $appointment['patient_type'] = ($total_bookings > 1) ? 'Old' : 'New';
+                if (!empty($appointment['patient_type'])) {
+                    $appointment['patient_type'] = ucfirst($appointment['patient_type']);
+                } else {
+                    $appointment['patient_type'] = ''; 
+                }
                 
                 if (!empty($appointment['created_by'])) {
                     if ($appointment['created_by'] == $appointment['id_users_customer']) {
@@ -1326,6 +1327,8 @@ class Calendar extends EA_Controller
             $action_name = 'Status Changed to ' . ucfirst($post_data['status']);
         } elseif (isset($post_data['is_whatsapp_sent'])) {
             $action_name = ($post_data['is_whatsapp_sent'] == 1) ? 'WhatsApp Marked as Sent' : 'WhatsApp Marked as Not Sent';
+        } elseif (isset($post_data['patient_type'])) {
+            $action_name = 'Patient Type Changed to ' . ucfirst($post_data['patient_type']);
         } elseif (isset($post_data['appointment_type'])) {
             $action_name = 'Type Changed to ' . ucfirst($post_data['appointment_type']);
         }

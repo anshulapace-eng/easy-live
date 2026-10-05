@@ -1114,6 +1114,8 @@
         <div class="legend-item"><span style="width: 14px; height: 14px; display: inline-block; background: #bfdbfe; border-radius: 3px;"></span> Past Booking</div>
         <div class="legend-item"><span style="width: 14px; height: 14px; display: inline-block; background: #fca5a5; border-radius: 3px;"></span> Cancelled</div>
         <div class="legend-item"><span style="width: 14px; height: 14px; display: inline-block; background: #a78bfa; border-radius: 3px;"></span> Video Visit</div>
+        <div class="legend-item"><span style="width: 14px; height: 14px; display: inline-block; background: #eff6ff; border-left: 3px solid #3b82f6; border-radius: 2px;"></span> New Patient</div>
+        <div class="legend-item"><span style="width: 14px; height: 14px; display: inline-block; background: #f8fafc; border-left: 3px solid #64748b; border-radius: 2px;"></span> Old Patient</div>
 
         <div class="legend-item"><i class="fa-brands fa-whatsapp legend-icon" style="color: #22c55e;"></i> WhatsApp sent & Patient Confirmed</div>
         <div class="legend-item"><i class="fa-regular fa-clock legend-icon" style="color: #eab308;"></i> WhatsApp sent & Not yet responded</div>
@@ -1363,6 +1365,17 @@
                             onclick="handleAppointmentAction(this, $('#cancelid').val(), { action: 'toggle_confirm' })"
                             style="padding: 1px 6px; background: #fee2e2; color: #991b1b; border-radius: 4px; font-size: 9px; font-weight: 700; display: flex; align-items: center; gap: 4px; cursor: pointer;">
                             No <i class="fa-solid fa-circle-xmark" style="font-size: 9px;"></i>
+                        </span>
+                    </div>
+                </div>
+                
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                    <span style="font-size: 11px; color: #0f172a; font-weight: 600;">Patient Type</span>
+                    <div style="display: flex; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 1px;">
+                        <span class="patient-type-toggle"
+                            onclick="handleAppointmentAction(this, $('#cancelid').val(), { action: 'toggle_patient_type' })"
+                            style="padding: 1px 6px; border-radius: 4px; font-size: 9px; font-weight: 700; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                            -
                         </span>
                     </div>
                 </div>
@@ -1770,6 +1783,17 @@ $(document).on('click', '#scroll-right-btn', function() {
             postData.is_whatsapp_sent = (currentText.startsWith('No') || currentText === "-") ? '1' : '0';
             successMsg = postData.is_whatsapp_sent === '1' ? "WhatsApp marked as sent." : "WhatsApp marked as not sent.";
         }
+         if (actionData.action === 'toggle_patient_type') {
+            let currentText = $el.text().trim();
+            if (currentText.startsWith('New')) {
+                postData.patient_type = 'Old';
+            } else if (currentText.startsWith('Old')) {
+                postData.patient_type = 'New';
+            } else {
+                postData.patient_type = 'Old'; 
+            }
+            successMsg = "Patient Type manually set to " + postData.patient_type;
+        }
         if (actionData.appointment_type) {
             postData.appointment_type = actionData.appointment_type;
             successMsg = postData.appointment_type === 'video' ? "Changed to Video Call." : "Changed to In-Clinic.";
@@ -1863,6 +1887,28 @@ $(document).on('click', '#scroll-right-btn', function() {
                             $video.find('.type-indicator').replaceWith('<div style="width: 12px; height: 12px; border: 1.5px solid #cbd5e1; border-radius: 50%;" class="type-indicator"></div>');
                         }
                     }
+                    
+                    if (postData.patient_type) {
+                    let newType = postData.patient_type;
+                    let badgeClass = newType.toLowerCase();
+                    
+                    // Button ka color change
+                    if (badgeClass === 'old') {
+                        $el.css({'background': '#f1f5f9', 'color': '#475569'})
+                           .html('Old <i class="fa-solid fa-clock-rotate-left" style="font-size: 9px;"></i>');
+                    } else {
+                        $el.css({'background': '#dbeafe', 'color': '#1e40af'})
+                           .html('New <i class="fa-solid fa-star" style="font-size: 9px;"></i>');
+                    }
+
+                    // Upar Chakra badge ka real-time update
+                    let badgeHtml = `
+                        <span class="chakra-badge-wrapper ${badgeClass}" style="margin-left: 0;">
+                            <span class="chakra-badge-text ${badgeClass}">${newType}</span>
+                        </span>
+                    `;
+                    $('#appointment-details-modal').find('.patient-badge-container').html(badgeHtml);
+                }
 
                     if (postData.is_unavailability === '0') {
                         $el.removeClass('blocked-slot')
@@ -2298,14 +2344,17 @@ $(document).on('click', '#scroll-right-btn', function() {
             const $modal = $('#appointment-details-modal');
 
             $modal.find('.customer-avatar').text(customerInitials);
-            let patientType = appointment.patient_type || 'New';
-            let badgeClass = patientType.toLowerCase();
-
-            let badgeHtml = `
-                <span class="chakra-badge-wrapper ${badgeClass}" style="margin-left: 0;">
-                    <span class="chakra-badge-text ${badgeClass}">${patientType}</span>
-                </span>
-            `;
+            let patientType = appointment.patient_type || '';
+            let badgeHtml = '';
+            
+            if (patientType !== '') {
+                let badgeClass = patientType.toLowerCase();
+                badgeHtml = `
+                    <span class="chakra-badge-wrapper ${badgeClass}" style="margin-left: 0;">
+                        <span class="chakra-badge-text ${badgeClass}">${patientType}</span>
+                    </span>
+                `;
+            }
             $modal.find('.customer-name').text(customerName);
             $modal.find('.patient-badge-container').html(badgeHtml);
             $modal.find('#cancelid').val(appointment.id);
@@ -2340,6 +2389,20 @@ $(document).on('click', '#scroll-right-btn', function() {
                 Location: Dr. Sahu's Clinic, E 339, GK1, New Delhi
                 Map location : https://maps.app.goo.gl/Z7oFhN7qNqTSPofV9`;
             }
+            
+            const $patientTypeSpan =$modal.find('.patient-type-toggle');
+            if (patientType.toLowerCase() === 'old') {
+                $patientTypeSpan.css({'background': '#f1f5f9', 'color': '#475569'})
+                                .html('Old <i class="fa-solid fa-clock-rotate-left" style="font-size: 9px;"></i>');
+            } else if (patientType.toLowerCase() === 'new') {
+                $patientTypeSpan.css({'background': '#dbeafe', 'color': '#1e40af'})
+                                .html('New <i class="fa-solid fa-star" style="font-size: 9px;"></i>');
+            } else {
+                // Agar DB me kuch nahi hai to button neutral rahega
+                $patientTypeSpan.css({'background': '#f8fafc', 'color': '#94a3b8', 'border': '1px dashed #cbd5e1'})
+                                .html('Set Type <i class="fa-solid fa-plus" style="font-size: 9px;"></i>');
+            }
+            
             let encodedMessage = encodeURIComponent(whatsappMessage);
             // $modal.find('.btn-send-whatsapp').attr('href', `https://wa.me/${cleanPhone}?text=${encodedMessage}`);
             $modal.find('.btn-send-whatsapp').attr('href', `https://wa.me/${cleanPhone}`);
@@ -2803,6 +2866,16 @@ $(document).on('click', '#scroll-right-btn', function() {
             if (isSelfBooked && !isCanceled) {
                 // Online booking ke liye ek alag aakarshak background color (jaise halka orange/peach ya custom blue tint)
                 customStyle = 'background-color: #ecfdf5; border-left: 3px solid #f43f5e;';
+            }
+            
+            let patientType = data.patient_type || '';
+            
+            if (!isCanceled && patientType !== '') {
+                if (patientType.toLowerCase() === 'new') {
+                    customStyle = 'background-color: #eff6ff; border-left: 3px solid #3b82f6;'; // Light Blue
+                } else if (patientType.toLowerCase() === 'old') {
+                    customStyle = 'background-color: #f8fafc; border-left: 3px solid #64748b;'; // Light Gray
+                }
             }
 
             let rightIcons = '';
