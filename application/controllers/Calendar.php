@@ -421,27 +421,27 @@ class Calendar extends EA_Controller
 
             $this->synchronization->sync_appointment_saved($appointment, $service, $provider, $customer, $settings);
 
-            if ($notify_users) {
-                $this->notifications->notify_appointment_saved(
-                    $appointment,
-                    $service,
-                    $provider,
-                    $customer,
-                    $settings,
-                    $manage_mode,
-                );
-            }
+            // if ($notify_users) {
+            //     $this->notifications->notify_appointment_saved(
+            //         $appointment,
+            //         $service,
+            //         $provider,
+            //         $customer,
+            //         $settings,
+            //         $manage_mode,
+            //     );
+            // }
 
             $this->webhooks_client->trigger(WEBHOOK_APPOINTMENT_SAVE, $appointment);
 
             // Trigger Professional WhatsApp Library cleanly
-            try {
-                if ($notify_users && !empty($customer['phone_number'])) {
-                    $this->whatsapp_lib->send_appointment_template($appointment, $customer, $provider, $service);
-                }
-            } catch (Exception $e) {
-                // Suppress exception
-            }
+            // try {
+            //     if ($notify_users && !empty($customer['phone_number'])) {
+            //         $this->whatsapp_lib->send_appointment_template($appointment, $customer, $provider, $service);
+            //     }
+            // } catch (Exception $e) {
+            //     // Suppress exception
+            // }
 
             json_response([
                 'success' => true,
@@ -1137,14 +1137,18 @@ class Calendar extends EA_Controller
 
             $appointment_id = request('appointment_id');
             $start_datetime = $this->input->post('start_datetime');
-           $end_datetime = $this->input->post('end_datetime');
+            $end_datetime = $this->input->post('end_datetime');
             $check_type = request('check_type');
+            
+           
+            $bp = $this->input->post('bp');
+            $weight = $this->input->post('weight');
 
             if (empty($appointment_id)) {
                 throw new InvalidArgumentException('No appointment ID provided.');
             }
 
-            // Find appointment to check permissions
+           
             $appointment = $this->appointments_model->find($appointment_id);
 
             if (!$appointment) {
@@ -1152,20 +1156,48 @@ class Calendar extends EA_Controller
             }
 
             $this->check_event_permissions((int) $appointment['id_users_provider']);
-
-            // Direct update using query builder to avoid model field restrictions
-            $this->db->where('id', $appointment_id);
-            $this->db->update('appointments', [
+            
+           
+            $update_data = [
                 'check_type' => (int) $check_type
-            ]);
+            ];
+            
+            
+            if ($bp !== null && $bp !== '') {
+                $update_data['bp'] = $bp;
+            }
+            if ($weight !== null && $weight !== '') {
+                $update_data['weight'] = $weight;
+            }
 
-            $action_name=((int) $check_type === 1) ? 'Checked In' : 'Checked Out';
+           
+            $this->db->where('id', $appointment_id);
+            $this->db->update('appointments', $update_data);
+
+            $action_name = ((int) $check_type === 1) ? 'Checked In' : 'Checked Out';
             $log_message = "{$action_name} for {$start_datetime} to {$end_datetime}";
+            
+          
+            if (!empty($bp) || !empty($weight)) {
+                $log_message .= " (Vitals: BP-{$bp}, Wt-{$weight})";
+            }
+            
             $this->log_appointment_action((int)$appointment_id, $log_message);
+
+            // Default message
+            $response_message = ((int) $check_type === 1) ? 'Checked in successfully.' : 'Checked out successfully.';
+            
+            if (!empty($bp) && !empty($weight)) {
+                $response_message = 'Vitals (BP & Weight) saved and Automatically Checked In successfully.';
+            } elseif (!empty($bp)) {
+                $response_message = 'Blood Pressure saved and Automatically Checked In successfully.';
+            } elseif (!empty($weight)) {
+                $response_message = 'Weight saved and Automatically Checked In successfully.';
+            }
 
             json_response([
                 'success' => true,
-                'message' => (int) $check_type === 1 ? 'Checked in successfully.' : 'Checked out successfully.'
+                'message' => $response_message
             ]);
         } catch (Throwable $e) {
             json_exception($e);

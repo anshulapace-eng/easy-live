@@ -647,15 +647,19 @@ App.Components.AppointmentsModal = (function () {
         });
 
         // Handle custom modal No button click
-        $(document).on('click', '#btn-notify-no', () => {
+        // $(document).on('click', '#btn-notify-no', () => {
+        //     $('#customNotifyModal').modal('hide');
+        //     App.Http.Calendar.saveAppointmentWithConflictHandling(
+        //         pendingAppointmentData,
+        //         pendingCustomerData,
+        //         successCallback,
+        //         errorCallback,
+        //         false
+        //     );
+        // });
+        
+          $(document).on('click', '#btn-notify-no', () => {
             $('#customNotifyModal').modal('hide');
-            App.Http.Calendar.saveAppointmentWithConflictHandling(
-                pendingAppointmentData,
-                pendingCustomerData,
-                successCallback,
-                errorCallback,
-                false
-            );
         });
 
         // Handle custom modal Yes button click

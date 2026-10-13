@@ -1292,6 +1292,31 @@
                         <span style="display: inline-block; margin-top: 4px; padding: 2px 8px; background: #e6f4ea; color: #137333; border-radius: 12px; font-size: 10px; font-weight: 600;" class="appointment-status">Confirmed</span>
 
                     </div>
+                    
+                    <!-- Vitals Dropdown Button (Right Corner) -->
+                    <div class="dropdown" style="flex-shrink: 0;">
+                        <button type="button" class="btn shadow-sm" data-bs-toggle="dropdown" aria-expanded="false" style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 4px 8px; font-size: 11px; font-weight: 700; color: #16a34a; display: flex; align-items: center; gap: 4px;" title="Add Vitals & Check-In">
+                            <i class="fa-solid fa-heart-pulse"></i> Vitals
+                        </button>
+                        
+                        <!-- Dropdown Menu -->
+                        <div class="dropdown-menu dropdown-menu-end shadow p-3" style="width: 220px; border-radius: 12px; border: 1px solid #e2e8f0; z-index: 1050;">
+                            <div style="font-size: 12px; font-weight: 700; color: #0f172a; margin-bottom: 10px;">
+                                Enter Vitals to Check-In
+                            </div>
+                            <div class="mb-2">
+                                <label style="font-size: 10px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Blood Pressure</label>
+                                <input type="text" id="vital-bp" class="form-control form-control-sm" placeholder="e.g. 120/80" style="font-size: 11px; border-radius: 6px;">
+                            </div>
+                            <div class="mb-3">
+                                <label style="font-size: 10px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Weight (kg)</label>
+                                <input type="text" id="vital-weight" class="form-control form-control-sm" placeholder="e.g. 65" style="font-size: 11px; border-radius: 6px;">
+                            </div>
+                            <button type="button" id="save-vitals-btn" class="btn btn-success btn-sm w-100" style="font-weight: 700; font-size: 11px; border-radius: 6px; padding: 6px; background: #16a34a; border: none; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                                <i class="fa-solid fa-circle-check"></i> Save & Check-In
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Date, Time, Location Box -->
@@ -1426,7 +1451,7 @@
                             Actions
                         </button>
                         <ul class="dropdown-menu shadow-sm" aria-labelledby="appointmentActionsDropdown" style="font-size: 11px; min-width: 110px;">
-                            <li><a class="dropdown-item text-success fw-bold action-check-status" href="#" data-check-type="1" style="padding: 4px 10px;"><i class="fa-solid fa-circle-check me-1"></i> Check In</a></li>
+                            <li><a class="dropdown-item text-success fw-bold action-check-status checkin-status" href="#" data-check-type="1" style="padding: 4px 10px;"><i class="fa-solid fa-circle-check me-1"></i> Check In</a></li>
                             <li><a class="dropdown-item text-primary fw-bold action-check-status checkout-status" href="#" data-check-type="0" style="padding: 4px 10px;"><i class="fa-solid fa-circle-right me-1"></i> Check Out</a></li>
                             <li>
                                 <hr class="dropdown-divider my-1">
@@ -1715,6 +1740,59 @@ $(document).on('click', '#scroll-right-btn', function() {
                 }
             });
         });
+        
+         $(document).on('click', '#save-vitals-btn', function(e) {
+            e.preventDefault();
+            
+            const appointmentId = $('#cancelid').val();
+            const startDatetime = $('#modal-start-datetime').val();
+            const endDatetime = $('#modal-end-datetime').val();
+            const bp = $('#vital-bp').val().trim();
+            const weight = $('#vital-weight').val().trim();
+
+            if (!bp && !weight) {
+                alert("Please enter BP or Weight to Check-In.");
+                return;
+            }
+
+            const $btn = $(this);
+            const originalText = $btn.html();
+            
+            $.ajax({
+                url: "<?= site_url('calendar/update_check_status') ?>",
+                type: "POST",
+                dataType: "json",
+                data: {
+                    appointment_id: appointmentId,
+                    start_datetime: startDatetime,
+                    end_datetime: endDatetime,
+                    check_type: 1,
+                    bp: bp,        
+                    weight: weight,
+                    csrf_token: vars('csrf_token')
+                },
+                beforeSend: function() {
+                    $btn.html('<i class="fa-solid fa-spinner fa-spin"></i> Saving...').prop('disabled', true);
+                },
+                success: function(response) {
+                    $btn.html(originalText).prop('disabled', false);
+                    if (response.success) {
+                        $('.dropdown-toggle').dropdown('hide');
+                        $('#appointment-details-modal').modal('hide');
+                        
+                        showToast("Vitals saved & Checked-In successfully.");
+                        refreshCalendar();
+                    } else {
+                        alert(response.message || "Something went wrong.");
+                    }
+                },
+                error: function() {
+                    $btn.html(originalText).prop('disabled', false);
+                    alert("Server connection error.");
+                }
+            });
+        });
+
 
 
         $(document).on('click', '.action-check-status', function(e) {
@@ -2314,6 +2392,16 @@ $(document).on('click', '#scroll-right-btn', function() {
             } else {
                 $(".checkout-status").prop('disabled', false).removeClass('disabled');
             }
+            
+            if (appointment.check_type != null) {
+                $(".checkin-status")
+                    .addClass('disabled')
+                    .css({ 'pointer-events': 'none', 'opacity': '0.5' });
+            } else {
+                $(".checkin-status")
+                    .removeClass('disabled')
+                    .css({ 'pointer-events': 'auto', 'opacity': '1' });
+            }
 
             const formattedStartDate = startDate.toLocaleDateString('en-US', {
                 weekday: 'short',
@@ -2422,6 +2510,8 @@ $(document).on('click', '#scroll-right-btn', function() {
             <b>Time:</b> ${formattedStartTime} <span style="color: #94a3b8;">...</span>`;
 
             $modal.find('.message-text').html(visibleMessage);
+            $modal.find('#vital-bp').val(appointment.bp || '');
+            $modal.find('#vital-weight').val(appointment.weight || '');
 
             $modal.find('.copy-msg-btn').off('click').on('click', function() {
                 navigator.clipboard.writeText(whatsappMessage).then(() => {
