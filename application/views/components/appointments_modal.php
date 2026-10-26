@@ -578,6 +578,14 @@ App.Components.AppointmentsModal = (function () {
 
             const endDateTimeObject = App.Utils.UI.getDateTimePickerValue($endDatetime);
             const endDatetime = moment(endDateTimeObject).format('YYYY-MM-DD HH:mm:ss');
+            
+            // agr date din ke 12 hai and but 00 aa rha hai to 12 kar dega
+            //  if (startDateTimeObject.getHours() === 12 && startDatetime.includes(' 00:')) {
+            //     startDatetime = startDatetime.replace(' 00:', ' 12:');
+            // }
+            // if (endDateTimeObject.getHours() === 12 && endDatetime.includes(' 00:')) {
+            //     endDatetime = endDatetime.replace(' 00:', ' 12:');
+            // }
 
             pendingAppointmentData = {
                 id_services: $selectService.val(),

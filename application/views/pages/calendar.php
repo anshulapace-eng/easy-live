@@ -1312,7 +1312,7 @@
                                 <label style="font-size: 10px; font-weight: 600; color: #64748b; margin-bottom: 2px;">Weight (kg)</label>
                                 <input type="text" id="vital-weight" class="form-control form-control-sm" placeholder="e.g. 65" style="font-size: 11px; border-radius: 6px;">
                             </div>
-                            <button type="button" id="save-vitals-btn" class="btn btn-success btn-sm w-100" style="font-weight: 700; font-size: 11px; border-radius: 6px; padding: 6px; background: #16a34a; border: none; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                            <button type="button" id="save-vitals-btn" class="btn btn-success btn-sm w-100" style="font-weight: 700; font-size: 11px; border-radius: 6px; padding: 6px; background: #16a34a; border: none; display: flex; align-items: center; justify-content: center; gap: 6px; color: #fff;">
                                 <i class="fa-solid fa-circle-check"></i> Save & Check-In
                             </button>
                         </div>
@@ -1621,8 +1621,15 @@ $(document).on('click', '#scroll-right-btn', function() {
 
             App.Components.AppointmentsModal.resetModal();
 
-            $('#appointment-id').val(appointment.id);
-            $('#appointment-status').val(appointment.status);
+            // $('#appointment-id').val(appointment.id);
+            // $('#appointment-status').val(appointment.status);
+            if (String(appointment.check_type) === "0") {
+                $('#appointment-id').val(''); // Blank ID = Create New Appointment
+                $('#appointment-status').val('booked'); // Naye appointment ka default status
+            } else {
+                $('#appointment-id').val(appointment.id); // Normal Reschedule/Edit
+                $('#appointment-status').val(appointment.status);
+            }
             $('#appointment-location').val(appointment.location);
             $('#appointment-meeting-link').val(appointment.meeting_link);
             $('#appointment-notes').val(appointment.notes);
@@ -1867,8 +1874,6 @@ $(document).on('click', '#scroll-right-btn', function() {
                 postData.patient_type = 'Old';
             } else if (currentText.startsWith('Old')) {
                 postData.patient_type = 'New';
-            } else {
-                postData.patient_type = 'Old'; 
             }
             successMsg = "Patient Type manually set to " + postData.patient_type;
         }
@@ -2382,10 +2387,47 @@ $(document).on('click', '#scroll-right-btn', function() {
             const aptDate = new Date(startDate);
             aptDate.setHours(0, 0, 0, 0);
 
-            if (aptDate < today || appointment.check_type === "0" || appointment.is_canceled === "1") {
+            // if (aptDate < today || appointment.check_type === "0" || appointment.is_canceled === "1") {
+            //     $('#modal-action-buttons').hide();
+            // } else {
+            //     $('#modal-action-buttons').show();
+            // }
+            
+            // if (aptDate < today || appointment.is_canceled === "1") {
+            //     $('#modal-action-buttons').hide();
+            // } else {
+            //     $('#modal-action-buttons').show();
+                
+            //     // Agar patient Checked-out (0) hai, toh 'Actions' menu ko disable karke,
+            //     // sirf 'Reschedule' button ko naye naam ke sath dikhayein
+            //     if (String(appointment.check_type) === "0") {
+            //         $('#appointmentActionsDropdown').prop('disabled', true).css('opacity', '0.5');
+            //         $('.btn-reschedule-appointment').html('<i class="fa-solid fa-plus"></i> Re-book / New');
+            //     } else {
+            //         $('#appointmentActionsDropdown').prop('disabled', false).css('opacity', '1');
+            //         $('.btn-reschedule-appointment').html('<i class="fa-regular fa-calendar-days"></i> Reschedule/Edit');
+            //     }
+            // }
+            
+            if (appointment.is_canceled === "1") {
+                // 1. Agar appointment cancel ho gaya hai, toh buttons hamesha hide rahenge
                 $('#modal-action-buttons').hide();
-            } else {
+                
+            } else if (String(appointment.check_type) === "0") {
+                // 2. Agar Checked-Out (0) hai, toh date chahe PAST ki ho ya FUTURE ki, Re-book button dikhana hai
                 $('#modal-action-buttons').show();
+                $('#appointmentActionsDropdown').prop('disabled', true).css('opacity', '0.5');
+                $('.btn-reschedule-appointment').html('<i class="fa-solid fa-plus"></i> Re-book / New');
+                
+            } else if (aptDate < today) {
+                // 3. Agar check-out nahi hai aur date past ki hai, toh buttons hide kardo
+                $('#modal-action-buttons').hide();
+                
+            } else {
+                // 4. Current ya Future dates (jinme check_type 0 nahi hai) ke liye normal buttons dikhao
+                $('#modal-action-buttons').show();
+                $('#appointmentActionsDropdown').prop('disabled', false).css('opacity', '1');
+                $('.btn-reschedule-appointment').html('<i class="fa-regular fa-calendar-days"></i> Reschedule/Edit');
             }
             if (appointment.check_type == null) {
                 $(".checkout-status").prop('disabled', true).addClass('disabled');
@@ -2432,7 +2474,7 @@ $(document).on('click', '#scroll-right-btn', function() {
             const $modal = $('#appointment-details-modal');
 
             $modal.find('.customer-avatar').text(customerInitials);
-            let patientType = appointment.patient_type || '';
+            let patientType = appointment.patient_type || 'Old';
             let badgeHtml = '';
             
             if (patientType !== '') {
@@ -2485,10 +2527,6 @@ $(document).on('click', '#scroll-right-btn', function() {
             } else if (patientType.toLowerCase() === 'new') {
                 $patientTypeSpan.css({'background': '#dbeafe', 'color': '#1e40af'})
                                 .html('New <i class="fa-solid fa-star" style="font-size: 9px;"></i>');
-            } else {
-                // Agar DB me kuch nahi hai to button neutral rahega
-                $patientTypeSpan.css({'background': '#f8fafc', 'color': '#94a3b8', 'border': '1px dashed #cbd5e1'})
-                                .html('Set Type <i class="fa-solid fa-plus" style="font-size: 9px;"></i>');
             }
             
             let encodedMessage = encodeURIComponent(whatsappMessage);
@@ -2958,13 +2996,11 @@ $(document).on('click', '#scroll-right-btn', function() {
                 customStyle = 'background-color: #ecfdf5; border-left: 3px solid #f43f5e;';
             }
             
-            let patientType = data.patient_type || '';
+            let patientType = data.patient_type || 'Old';
             
             if (!isCanceled && patientType !== '') {
                 if (patientType.toLowerCase() === 'new') {
-                    customStyle = 'background-color: #eff6ff; border-left: 3px solid #3b82f6;'; // Light Blue
-                } else if (patientType.toLowerCase() === 'old') {
-                    customStyle = 'background-color: #f8fafc; border-left: 3px solid #64748b;'; // Light Gray
+                   customStyle = 'background-color: #fff7ed; border-left: 3px solid #f97316;'; 
                 }
             }
 
@@ -2985,15 +3021,53 @@ $(document).on('click', '#scroll-right-btn', function() {
             if (data.star) rightIcons += `<i class="fa-solid fa-star" style="color: #f59e0b; font-size: 11px;" title="Old Booking"></i>`;
             if (data.blocked) rightIcons += `<i class="fa-solid fa-circle-minus" style="color: #ef4444; font-size: 11px;"></i>`;
 
-            if (data.start_datetime) {
+            // if (data.start_datetime) {
+            //     const appointmentDate = new Date(data.start_datetime.replace(' ', 'T'));
+            //     const currentDate = new Date();
+
+            //     const diffTime = currentDate - appointmentDate;
+            //     const diffDays = diffTime / (1000 * 60 * 60 * 24);
+
+            //     if (diffDays > 14 || data.star) {
+            //         rightIcons += ` <i class="fa-solid fa-star" style="color: #f59e0b; font-size: 11px;" title="Old booking > 2 weeks"></i>`;
+            //     }
+            // }
+            
+            // if (data.start_datetime && !isCanceled) {
+            //     const appointmentDate = new Date(data.start_datetime.replace(' ', 'T'));
+                
+            //     // Appointment kis din book hui thi (create_datetime)
+            //     const createDate = data.create_datetime ? new Date(data.create_datetime.replace(' ', 'T')) : new Date();
+
+            //     // 1. Advance Booking check (Start Date aur Create Date ka difference)
+            //     const diffTimeAdvance = appointmentDate.getTime() - createDate.getTime();
+            //     const diffDaysAdvance = diffTimeAdvance / (1000 * 60 * 60 * 24);
+
+            //     // 2. Old Booking check (Aaj ki date aur Create Date ka difference)
+            //     const diffTimeOld = new Date().getTime() - createDate.getTime();
+            //     const diffDaysOld = diffTimeOld / (1000 * 60 * 60 * 24);
+
+            //     // Agar booking 14 din se zyada advance me ki gayi thi, YA ise bane hue 14 din se upar ho gaye hain
+            //     if (diffDaysAdvance >= 14 || diffDaysOld >= 14 || data.star) {
+            //         rightIcons += ` <i class="fa-solid fa-star" style="color: #f59e0b; font-size: 11px;" title="Old booking / Advance > 2 weeks"></i>`;
+            //     }
+            // }
+            
+            if (data.start_datetime && !isCanceled) {
                 const appointmentDate = new Date(data.start_datetime.replace(' ', 'T'));
                 const currentDate = new Date();
 
-                const diffTime = currentDate - appointmentDate;
-                const diffDays = diffTime / (1000 * 60 * 60 * 24);
+                // Aaj ki date se appointment kitne din aage hai (Future check)
+                const diffTimeFuture = appointmentDate.getTime() - currentDate.getTime();
+                const diffDaysFuture = diffTimeFuture / (1000 * 60 * 60 * 24);
 
-                if (diffDays > 14 || data.star) {
-                    rightIcons += ` <i class="fa-solid fa-star" style="color: #f59e0b; font-size: 11px;" title="Old booking > 2 weeks"></i>`;
+                // Purani booking check (Past check) - agar 14 din nikal chuke hain
+                const diffTimePast = currentDate.getTime() - appointmentDate.getTime();
+                const diffDaysPast = diffTimePast / (1000 * 60 * 60 * 24);
+
+                // Agar appointment aaj se 14 din baad ka hai (Advance) YA 14 din purana ho chuka hai (Old)
+                if (diffDaysFuture >= 14 || diffDaysPast >= 14 || data.star) {
+                    rightIcons += ` <i class="fa-solid fa-star" style="color: #f59e0b; font-size: 11px;" title="Advance/Old Booking > 2 weeks"></i>`;
                 }
             }
 

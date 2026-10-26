@@ -349,6 +349,10 @@ class Calendar extends EA_Controller
                 if (empty($appointment['appointment_type'])) {
                     $appointment['appointment_type'] = 'in-clinic';
                 }
+                
+                if (empty($appointment['patient_type'])) {
+                        $appointment['patient_type'] = 'Old';
+                }
 
                 // Check if the provider has a conflicting appointment at the selected time
                 $exclude_appointment_id = !empty($appointment['id']) ? (int) $appointment['id'] : null;
